@@ -108,7 +108,7 @@ jobs:
           rm -rf work/LSPatch/.git work/DLsiteFloat-src/.git
           cp README.md THIRD_PARTY.md LICENSE work/LSPatch/
           mkdir -p work/Rootless-Patcher-src
-          cp -a .github overlay scripts README.md THIRD_PARTY.md LICENSE CHANGELOG.md PROJECT_STATUS.md .gitignore work/Rootless-Patcher-src/
+          cp -a .github overlay dlsitefloat-overlay scripts README.md THIRD_PARTY.md LICENSE CHANGELOG.md PROJECT_STATUS.md .gitignore work/Rootless-Patcher-src/
           tar -C work \
             --exclude='*/build' --exclude='*/build/*' \
             --exclude='*/.gradle' --exclude='*/.gradle/*' \

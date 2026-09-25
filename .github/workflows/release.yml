@@ -109,6 +109,9 @@ jobs:
               > SHA256SUMS.txt
           )
 
+      - name: Verify release APK
+        run: python3 scripts/verify_built_apk.py dist/DLsiteSound-Rootless-Patcher-${{ github.ref_name }}.apk release
+
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

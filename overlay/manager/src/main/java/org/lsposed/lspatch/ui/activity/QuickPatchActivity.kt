@@ -56,7 +56,6 @@ import org.lsposed.lspatch.data.model.PatchStep
 import org.lsposed.lspatch.data.model.PatchTarget
 import org.lsposed.lspatch.data.repository.PatchJobHost
 import org.lsposed.lspatch.data.repository.PatchRequestStore
-import org.lsposed.lspatch.lspApp
 
 private const val TARGET_PACKAGE = "jp.co.eisys.dlsitesound"
 private const val MODULE_PACKAGE = "io.github.ariinyume.dlsitesoundfloat"

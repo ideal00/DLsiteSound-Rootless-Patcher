@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout patcher repository
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Checkout pinned LSPatch v1.2 source
         run: |

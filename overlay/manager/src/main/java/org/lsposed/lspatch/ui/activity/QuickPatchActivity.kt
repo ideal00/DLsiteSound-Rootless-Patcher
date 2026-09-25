@@ -167,14 +167,15 @@ private fun QuickPatchScreen(
                 }
             }
 
-            StatusCard(title = "DLsiteFloat") {
+            StatusCard(title = "内置模块 · DLsiteFloat") {
                 when {
                     moduleFile != null -> {
-                        Text("v2.1.0 ✓")
+                        Text("v2.1.0 ✓  已打包在补丁器内")
+                        Text("无需单独安装 DLsiteFloat")
                         Text(MODULE_PACKAGE)
                     }
                     loading -> Text("正在准备内置模块……")
-                    else -> Text("模块准备失败")
+                    else -> Text("内置模块准备失败")
                 }
             }
 

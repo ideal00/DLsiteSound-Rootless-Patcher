@@ -58,9 +58,9 @@ def apk_signing_ids(blob: bytes) -> set[int]:
 
 def main() -> None:
     if len(sys.argv) not in (2, 3):
-        raise SystemExit("usage: verify_built_apk.py APK [ci-arm64|release]")
+        raise SystemExit("usage: verify_built_apk.py APK [full|release]")
     apk = Path(sys.argv[1])
-    mode = sys.argv[2] if len(sys.argv) == 3 else "ci-arm64"
+    mode = sys.argv[2] if len(sys.argv) == 3 else "full"
     if not apk.is_file():
         fail(f"APK does not exist: {apk}")
 
@@ -111,15 +111,11 @@ def main() -> None:
         )
         if not lspatch_sos:
             fail("no LSPatch native loader is bundled")
-        if mode == "ci-arm64":
-            expected = ["assets/lspatch/so/arm64-v8a/liblspatch.so"]
-            if lspatch_sos != expected:
-                fail(f"CI APK loader ABIs differ from expected arm64-only build: {lspatch_sos}")
-        elif mode == "release":
+        if mode in ("full", "release"):
             expected_abis = {"arm64-v8a", "armeabi-v7a", "x86", "x86_64"}
             actual_abis = {name.split("/")[3] for name in lspatch_sos}
             if actual_abis != expected_abis:
-                fail(f"release APK loader ABIs are incomplete: {sorted(actual_abis)}")
+                fail(f"{mode} APK loader ABIs are incomplete: {sorted(actual_abis)}")
         else:
             fail(f"unknown verification mode: {mode}")
 

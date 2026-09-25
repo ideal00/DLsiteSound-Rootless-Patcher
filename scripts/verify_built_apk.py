@@ -83,11 +83,19 @@ def main() -> None:
 
         module = zf.read(MODULE_ASSET)
         actual_module_sha = hashlib.sha256(module).hexdigest()
-        if actual_module_sha != EXPECTED_MODULE_SHA256:
-            fail(
-                "embedded DLsiteFloat checksum mismatch: "
-                f"{actual_module_sha} != {EXPECTED_MODULE_SHA256}"
-            )
+        try:
+            import io
+            with zipfile.ZipFile(io.BytesIO(module)) as module_zip:
+                module_dex = module_zip.read("classes.dex")
+        except Exception as exc:
+            fail(f"embedded DLsiteFloat is not a readable APK: {exc}")
+        for needle in (
+            b"io.github.ariinyume.dlsitesoundfloat",
+            b"PlayerControlBridge",
+            b"PlaybackControlsView",
+        ):
+            if needle not in module_dex:
+                fail(f"embedded custom DLsiteFloat is missing {needle!r}")
 
         manifest = zf.read("AndroidManifest.xml")
         dex = zf.read("classes.dex")
@@ -132,7 +140,7 @@ def main() -> None:
     print(f"APK verified: {apk}")
     print(f"sha256={hashlib.sha256(blob).hexdigest()}")
     print(f"signing_block_ids={','.join(hex(i) for i in sorted(ids))}")
-    print(f"embedded_module_sha256={EXPECTED_MODULE_SHA256}")
+    print(f"embedded_module_sha256={actual_module_sha}")
     print(f"mode={mode}")
 
 

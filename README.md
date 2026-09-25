@@ -1,5 +1,7 @@
 # DLsiteSound Rootless Subtitle Patcher
 
+当前补丁器版本：**0.1.0-alpha.1**
+
 面向 Android 的 **无 Root DLsiteSound 字幕补丁器**。
 
 它基于 [JingMatrix/LSPatch](https://github.com/JingMatrix/LSPatch) v1.2 的补丁引擎，在用户自己的手机上读取已经安装的 DLsiteSound（`base.apk + split APKs`），以 **Integrated mode** 嵌入 [DLsiteSoundFloatingSubtitle](https://github.com/ariinyume/DLSiteSoundFloatingSubtitle) v2.1.0，然后交给 Android 安装器安装。
@@ -81,3 +83,23 @@ CI 在没有签名 Secrets 时可以生成测试 APK，但不同 CI 运行生成
 本项目为 GPL-3.0。LSPatch 与 DLsiteFloat 也均为 GPL-3.0。详见 `THIRD_PARTY.md`。
 
 GitHub Actions 同时上传 **combined-source**，包含实际参与该次 APK 构建的 LSPatch 完整源码（含 submodules）、DLsiteFloat v2.1.0 源码、overlay 和许可证，方便满足对应源码分发要求。
+
+
+## CI 测试包
+
+`Build APK` 工作流为了缩短验证时间，只编译 **arm64-v8a** 的 LSPatch native loader，因此其 APK 文件名明确为：
+
+```text
+DLsiteSound-Rootless-Patcher-arm64-ci.apk
+```
+
+它适合当前绝大多数现代 Android 手机进行真机测试，但**不作为正式发布包**。
+
+正式 GitHub Release 仍编译：
+
+- arm64-v8a
+- armeabi-v7a
+- x86
+- x86_64
+
+并且必须使用仓库 Secrets 中配置的稳定发布签名。

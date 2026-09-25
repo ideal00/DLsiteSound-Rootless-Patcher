@@ -37,6 +37,7 @@ old_x_deps = '''dependencies {
 '''
 new_x_deps = '''dependencies {
     implementation("io.github.libxposed:api:102.0.0")
+    implementation("io.github.libxposed:interface:102.0.0")
     implementation(projects.external.axml)
 '''
 if old_x_deps not in x:

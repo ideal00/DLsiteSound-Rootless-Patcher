@@ -1,0 +1,108 @@
+name: Bug report
+description: Report a problem with patching, installing, or floating subtitles
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。请不要上传或公开分享 DLsiteSound 原始 APK / split APK。
+
+  - type: input
+    id: patcher_version
+    attributes:
+      label: Patcher 版本
+      placeholder: 0.1.0-alpha.1
+    validations:
+      required: true
+
+  - type: input
+    id: dlsite_version
+    attributes:
+      label: DLsiteSound 版本
+      placeholder: 2.19.0 (573)
+    validations:
+      required: true
+
+  - type: input
+    id: android
+    attributes:
+      label: Android / 系统
+      placeholder: Android 16 / ColorOS 16
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: 设备
+      placeholder: 品牌和型号
+    validations:
+      required: true
+
+  - type: input
+    id: splits
+    attributes:
+      label: Split 数量
+      description: 补丁器首页显示“基础包 + N 个分包”中的 N
+      placeholder: "3"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: stage
+    attributes:
+      label: 问题阶段
+      options:
+        - 检测 DLsiteSound
+        - 准备 DLsiteFloat
+        - 读取 APK
+        - 签名准备
+        - 重写清单
+        - 注入加载器
+        - 嵌入 DLsiteFloat
+        - 处理 Split APK
+        - 写入并签名
+        - 卸载官方版
+        - 安装修补版
+        - 悬浮窗权限
+        - DLsiteSound 启动
+        - 悬浮字幕运行
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: 实际发生了什么
+      description: 请贴完整错误文本或描述现象。
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: permissions
+    attributes:
+      label: 权限检查
+      options:
+        - label: 已允许补丁器“安装未知应用”（如果问题发生在安装阶段）
+        - label: 已允许 DLsiteSound“显示在其他应用上层”（如果问题发生在悬浮字幕阶段）
+
+  - type: checkboxes
+    id: legal
+    attributes:
+      label: APK 文件
+      options:
+        - label: 我没有在 Issue 中上传或链接 DLsiteSound 原始 APK / split APK
+          required: true

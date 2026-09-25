@@ -56,8 +56,9 @@ cd work/LSPatch
 1. 克隆 LSPatch **固定 commit `0dc50f42503711b14f5e2bb217c2bdd6321ce5be`**（v1.2）。
 2. 初始化其 submodules。
 3. 覆盖本项目的 Quick Patcher UI。
-4. 下载 DLsiteFloat v2.1.0，并校验 SHA-256。
-5. 修改 Manager 的 launcher 与 applicationId，使其成为独立补丁器。
+4. 克隆固定的 DLsiteFloat v2.1.0 源码 commit，并应用本仓库的增强 overlay。
+5. 编译自定义 DLsiteFloat APK，静态验证播放控制与外观设置代码已打入。
+6. 将增强模块嵌入 Manager，并修改 launcher/applicationId。
 
 也可以直接运行 GitHub Actions 中的 **Build APK**。
 
@@ -116,5 +117,10 @@ Rootless Controls v1 在原悬浮字幕窗上增加：
 - 5 秒无操作自动隐藏控制栏
 - 窗口锁定，避免点控制键时误拖
 - 窗口位置和尺寸跨进程持久化
+- ⚙ 内联设置面板
+- 字幕面板透明度：20%–100%
+- 控制栏透明度：20%–100%
+- 字幕字号：13–24sp
+- 上述外观设置跨进程持久化
 
-点击字幕面板可显示 / 隐藏控制栏。
+点击字幕面板可显示 / 隐藏控制栏；在控制栏点 **⚙** 展开外观设置。调整透明度和字号会实时生效。

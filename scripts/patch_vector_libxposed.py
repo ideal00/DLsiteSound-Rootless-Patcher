@@ -10,9 +10,10 @@ vector = lspatch / "core"
 
 xposed = vector / "xposed/build.gradle.kts"
 daemon = vector / "services/daemon-service/build.gradle.kts"
+legacy = vector / "legacy/build.gradle.kts"
 share_android = lspatch / "share/android/build.gradle.kts"
 
-if not xposed.exists() or not daemon.exists() or not share_android.exists():
+if not xposed.exists() or not daemon.exists() or not legacy.exists() or not share_android.exists():
     raise SystemExit(f"not a compatible pinned LSPatch/Vector tree: {lspatch}")
 
 x = xposed.read_text(encoding="utf-8")
@@ -69,6 +70,20 @@ if old_d_deps not in d:
     raise SystemExit("Vector daemon-service dependencies changed; refusing to patch blindly")
 d = d.replace(old_d_deps, new_d_deps, 1)
 daemon.write_text(d, encoding="utf-8")
+
+
+l = legacy.read_text(encoding="utf-8")
+old_l_deps = '''dependencies {
+    api(projects.xposed)
+'''
+new_l_deps = '''dependencies {
+    compileOnly("io.github.libxposed:api:102.0.0")
+    api(projects.xposed)
+'''
+if old_l_deps not in l:
+    raise SystemExit("Vector legacy dependencies changed; refusing to patch blindly")
+l = l.replace(old_l_deps, new_l_deps, 1)
+legacy.write_text(l, encoding="utf-8")
 
 s = share_android.read_text(encoding="utf-8")
 old_s_deps = '''dependencies {

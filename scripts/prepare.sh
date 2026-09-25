@@ -22,7 +22,7 @@ git -C "$UPSTREAM/core" submodule update --init --recursive \
   external/lsplt \
   external/xz-embedded
 
-python3 "$ROOT/scripts/patch_vector_libxposed.py" "$UPSTREAM/core"
+python3 "$ROOT/scripts/patch_vector_libxposed.py" "$UPSTREAM"
 
 python3 "$ROOT/scripts/apply_overlay.py" "$UPSTREAM"
 

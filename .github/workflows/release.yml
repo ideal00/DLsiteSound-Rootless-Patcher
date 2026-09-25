@@ -91,7 +91,9 @@ jobs:
           git clone --depth 1 --branch v2.1.0 https://github.com/ariinyume/DLSiteSoundFloatingSubtitle.git work/DLsiteFloat-src
           rm -rf work/LSPatch/.git work/DLsiteFloat-src/.git
           cp README.md THIRD_PARTY.md LICENSE work/LSPatch/
-          tar -C work -czf dist/DLsiteSound-Rootless-Patcher-${{ github.ref_name }}-combined-source.tar.gz LSPatch DLsiteFloat-src
+          mkdir -p work/Rootless-Patcher-src
+          cp -a .github overlay scripts README.md THIRD_PARTY.md LICENSE CHANGELOG.md PROJECT_STATUS.md .gitignore work/Rootless-Patcher-src/
+          tar -C work -czf dist/DLsiteSound-Rootless-Patcher-${{ github.ref_name }}-combined-source.tar.gz LSPatch DLsiteFloat-src Rootless-Patcher-src
           (cd dist && sha256sum * > SHA256SUMS.txt)
 
       - name: Publish GitHub Release

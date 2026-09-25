@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0-dev
+## 0.2.0 — 2026-09-25
 
 - DLsiteFloat 改为从固定 v2.1.0 源码 commit 构建，不再嵌入上游预编译 APK。
 - 新增 Rootless Controls v1：

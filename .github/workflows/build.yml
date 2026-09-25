@@ -39,25 +39,6 @@ jobs:
       - name: Apply quick-patcher overlay
         run: python3 scripts/apply_overlay.py work/LSPatch
 
-      - name: Limit CI native build to arm64-v8a
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-
-          lsp = Path("work/LSPatch/build.gradle.kts")
-          s = lsp.read_text()
-          old = 'abiFilters("arm64-v8a", "armeabi-v7a", "x86", "x86_64")'
-          if old not in s:
-              raise SystemExit("LSPatch ABI filter line changed")
-          lsp.write_text(s.replace(old, 'abiFilters("arm64-v8a")', 1))
-
-          vec = Path("work/LSPatch/core/build.gradle.kts")
-          s = vec.read_text()
-          old = 'ndk { abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")) }'
-          if old not in s:
-              raise SystemExit("Vector ABI filter line changed")
-          vec.write_text(s.replace(old, 'ndk { abiFilters.add("arm64-v8a") }', 1))
-          PY
 
       - name: Bundle pinned DLsiteFloat
         run: |

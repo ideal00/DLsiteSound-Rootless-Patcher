@@ -46,7 +46,7 @@ public final class PlaybackControlsView extends LinearLayout {
     private final TextView playPause;
     private final TextView lockButton;
     private final TextView settingsButton;
-    private final LinearLayout settingsPanel;
+    private LinearLayout settingsPanel;
 
     private boolean userSeeking;
     private boolean adjustingSetting;
@@ -61,7 +61,7 @@ public final class PlaybackControlsView extends LinearLayout {
     };
 
     private final Runnable autoHide = () -> {
-        if (!userSeeking && !adjustingSetting && settingsPanel.getVisibility() != VISIBLE) {
+        if (!userSeeking && !adjustingSetting && settingsPanel != null && settingsPanel.getVisibility() != VISIBLE) {
             setVisibility(GONE);
         }
     };

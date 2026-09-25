@@ -36,8 +36,29 @@ patch(p, "    private CloseButtonView closeBtn;\n",
 patch(p, "    public void onPanelTapped() {\n        if (closeBtn == null) {\n",
       "    public void onPanelTapped() {\n        if (playbackControls != null) { playbackControls.toggleControls(); }\n        if (closeBtn == null) {\n",
       "FloatingSubtitleView panel tap")
+patch(p, "        panel.setAlpha(blurActive ? 242 : 255);\n",
+      "        int opacityPct = getContext().getSharedPreferences(PlaybackControlsView.PREFS, Context.MODE_PRIVATE)\n                .getInt(PlaybackControlsView.PREF_PANEL_OPACITY, PlaybackControlsView.DEFAULT_PANEL_OPACITY);\n        opacityPct = Math.max(20, Math.min(100, opacityPct));\n        panel.setAlpha(Math.round(255f * opacityPct / 100f));\n",
+      "FloatingSubtitleView panel opacity")
+patch(p, "        hint.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);\n",
+      "        hint.setTextSize(TypedValue.COMPLEX_UNIT_SP, Math.max(12f, getSubtitleFontSizeSp() - 3f));\n",
+      "FloatingSubtitleView hint font size")
+patch(p, "            styleLine(tv, 18f, 0xFFFFFFFF, 1.0f, false);\n",
+      "            styleLine(tv, getSubtitleFontSizeSp(), 0xFFFFFFFF, 1.0f, false);\n",
+      "FloatingSubtitleView mirrored font size")
+patch(p, "                styleLine(tv, BASE_TEXT_SP * CURRENT_SCALE, 0xFFFFFFFF, 1.0f, true);\n",
+      "                styleLine(tv, getSubtitleFontSizeSp() * CURRENT_SCALE, 0xFFFFFFFF, 1.0f, true);\n",
+      "FloatingSubtitleView current font size")
+patch(p, "                    styleLine(tv, 15f, 0x99FFFFFF, 0.35f, false);\n",
+      "                    styleLine(tv, Math.max(11f, getSubtitleFontSizeSp() - 2f), 0x99FFFFFF, 0.35f, false);\n",
+      "FloatingSubtitleView context font size")
+patch(p, "                BASE_TEXT_SP * CURRENT_SCALE, getContext().getResources().getDisplayMetrics());\n",
+      "                getSubtitleFontSizeSp() * CURRENT_SCALE, getContext().getResources().getDisplayMetrics());\n",
+      "FloatingSubtitleView measurement font size")
+patch(p, "    /** 重算并把当前字幕行滚动到悬浮窗垂直居中（缩放窗口后调用；v20：不带动画，避免拖拽时抖动）。 */\n",
+      "    private float getSubtitleFontSizeSp() {\n        int value = getContext().getSharedPreferences(PlaybackControlsView.PREFS, Context.MODE_PRIVATE)\n                .getInt(PlaybackControlsView.PREF_FONT_SIZE_SP, PlaybackControlsView.DEFAULT_FONT_SIZE_SP);\n        return Math.max(13, Math.min(24, value));\n    }\n\n    private void applyAppearanceSettings() {\n        applyPanelBackground();\n        if (hint != null) {\n            hint.setTextSize(TypedValue.COMPLEX_UNIT_SP, Math.max(12f, getSubtitleFontSizeSp() - 3f));\n        }\n        lastRenderKey = null;\n        updateFromRepository();\n        requestLayout();\n    }\n\n    /** 重算并把当前字幕行滚动到悬浮窗垂直居中（缩放窗口后调用；v20：不带动画，避免拖拽时抖动）。 */\n",
+      "FloatingSubtitleView appearance helpers")
 patch(p, "        closeBtn.setOnClickListener(v -> {\n",
-      "        playbackControls = new PlaybackControlsView(getContext());\n        FrameLayout.LayoutParams controlsLp = new FrameLayout.LayoutParams(\n                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);\n        controlsLp.gravity = Gravity.BOTTOM;\n        controlsLp.leftMargin = dp(10);\n        controlsLp.rightMargin = dp(46);\n        controlsLp.bottomMargin = dp(10);\n        playbackControls.setLayoutParams(controlsLp);\n\n        closeBtn.setOnClickListener(v -> {\n",
+      "        playbackControls = new PlaybackControlsView(getContext(), this::applyAppearanceSettings);\n        FrameLayout.LayoutParams controlsLp = new FrameLayout.LayoutParams(\n                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);\n        controlsLp.gravity = Gravity.BOTTOM;\n        controlsLp.leftMargin = dp(10);\n        controlsLp.rightMargin = dp(46);\n        controlsLp.bottomMargin = dp(10);\n        playbackControls.setLayoutParams(controlsLp);\n\n        closeBtn.setOnClickListener(v -> {\n",
       "FloatingSubtitleView create controls")
 patch(p, "        addView(grip);\n        addView(closeBtn); // 最后添加，保证在最上层、可点击\n",
       "        addView(grip);\n        addView(playbackControls);\n        addView(closeBtn); // 最后添加，保证在最上层、可点击\n",

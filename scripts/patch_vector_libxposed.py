@@ -13,8 +13,9 @@ daemon = vector / "services/daemon-service/build.gradle.kts"
 legacy = vector / "legacy/build.gradle.kts"
 share_android = lspatch / "share/android/build.gradle.kts"
 manager = lspatch / "manager/build.gradle.kts"
+patch_loader = lspatch / "patch-loader/build.gradle.kts"
 
-if not xposed.exists() or not daemon.exists() or not legacy.exists() or not share_android.exists() or not manager.exists():
+if not xposed.exists() or not daemon.exists() or not legacy.exists() or not share_android.exists() or not manager.exists() or not patch_loader.exists():
     raise SystemExit(f"not a compatible pinned LSPatch/Vector tree: {lspatch}")
 
 x = xposed.read_text(encoding="utf-8")
@@ -114,5 +115,19 @@ if old_m_deps not in m:
     raise SystemExit("LSPatch manager dependencies changed; refusing to patch blindly")
 m = m.replace(old_m_deps, new_m_deps, 1)
 manager.write_text(m, encoding="utf-8")
+
+
+pl = patch_loader.read_text(encoding="utf-8")
+old_pl_deps = '''dependencies {
+    compileOnly("vector:stubs")
+'''
+new_pl_deps = '''dependencies {
+    implementation("io.github.libxposed:interface:102.0.0")
+    compileOnly("vector:stubs")
+'''
+if old_pl_deps not in pl:
+    raise SystemExit("LSPatch patch-loader dependencies changed; refusing to patch blindly")
+pl = pl.replace(old_pl_deps, new_pl_deps, 1)
+patch_loader.write_text(pl, encoding="utf-8")
 
 print("Historical libxposed source submodules replaced with official Maven Central 102.0.0 artifacts")

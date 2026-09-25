@@ -45,11 +45,9 @@ jobs:
       - name: Use official libxposed 102 Maven artifacts
         run: python3 scripts/patch_vector_libxposed.py work/LSPatch
 
-      - name: Bundle DLsiteFloat and verify checksum
+      - name: Prepare pinned DLsiteFloat source + playback-control overlay
         run: |
-          mkdir -p work/LSPatch/manager/src/main/assets/quickpatch
-          curl -fL             https://github.com/ariinyume/DLSiteSoundFloatingSubtitle/releases/download/v2.1.0/DLsiteFloat-2.1.0-debug.apk             -o work/LSPatch/manager/src/main/assets/quickpatch/DLsiteFloat-2.1.0-debug.apk
-          echo 'c7c15e16f8afd7b3266ed6d38d08b0380e8ae9fc80a8a5e8a05a039fa86eede1  work/LSPatch/manager/src/main/assets/quickpatch/DLsiteFloat-2.1.0-debug.apk' | sha256sum -c -
+          scripts/prepare_dlsitesfloat.sh work/DLsiteFloat-src
           python3 scripts/verify_no_dlsitesound_apk.py .
 
       - uses: actions/setup-java@v5
@@ -61,6 +59,9 @@ jobs:
       - uses: seanmiddleditch/gha-setup-ninja@v6
         with:
           version: 1.12.0
+
+      - name: Build custom DLsiteFloat module
+        run: scripts/build_dlsitesfloat.sh work/DLsiteFloat-src work/LSPatch/manager/src/main/assets/quickpatch
 
       - name: Configure signing and build
         working-directory: work/LSPatch
@@ -88,7 +89,6 @@ jobs:
           APK=$(find work/LSPatch/manager/build/outputs/apk/release work/LSPatch/out/release -name '*.apk' -type f 2>/dev/null | head -n 1)
           test -n "$APK"
           cp "$APK" dist/DLsiteSound-Rootless-Patcher-${{ github.ref_name }}.apk
-          git clone --depth 1 --branch v2.1.0 https://github.com/ariinyume/DLSiteSoundFloatingSubtitle.git work/DLsiteFloat-src
           rm -rf work/LSPatch/.git work/DLsiteFloat-src/.git
           cp README.md THIRD_PARTY.md LICENSE work/LSPatch/
           mkdir -p work/Rootless-Patcher-src

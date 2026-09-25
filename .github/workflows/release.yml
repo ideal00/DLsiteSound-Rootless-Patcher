@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Require stable signing secrets
+        env:
+          KEY_STORE: ${{ secrets.KEY_STORE }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          test -n "$KEY_STORE"
+          test -n "$KEY_STORE_PASSWORD"
+          test -n "$KEY_ALIAS"
+          test -n "$KEY_PASSWORD"
+
+      - name: Checkout pinned LSPatch
+        run: |
+          git clone https://github.com/JingMatrix/LSPatch.git work/LSPatch
+          git -C work/LSPatch checkout 0dc50f42503711b14f5e2bb217c2bdd6321ce5be
+          git -C work/LSPatch submodule update --init --recursive
+          python3 scripts/apply_overlay.py work/LSPatch
+
+      - name: Bundle DLsiteFloat and verify checksum
+        run: |
+          mkdir -p work/LSPatch/manager/src/main/assets/quickpatch
+          curl -fL             https://github.com/ariinyume/DLSiteSoundFloatingSubtitle/releases/download/v2.1.0/DLsiteFloat-2.1.0-debug.apk             -o work/LSPatch/manager/src/main/assets/quickpatch/DLsiteFloat-2.1.0-debug.apk
+          echo 'c7c15e16f8afd7b3266ed6d38d08b0380e8ae9fc80a8a5e8a05a039fa86eede1  work/LSPatch/manager/src/main/assets/quickpatch/DLsiteFloat-2.1.0-debug.apk' | sha256sum -c -
+          python3 scripts/verify_no_dlsitesound_apk.py .
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: gradle/actions/setup-gradle@v6
+      - uses: android-actions/setup-android@v4
+      - uses: seanmiddleditch/gha-setup-ninja@v6
+        with:
+          version: 1.12.0
+
+      - name: Configure signing and build
+        working-directory: work/LSPatch
+        env:
+          KEY_STORE: ${{ secrets.KEY_STORE }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          rm -rf "$ANDROID_HOME/cmake"
+          echo "$KEY_STORE" | base64 --decode > quickpatch-release.jks
+          {
+            echo "androidStorePassword=$KEY_STORE_PASSWORD"
+            echo "androidKeyAlias=$KEY_ALIAS"
+            echo "androidKeyPassword=$KEY_PASSWORD"
+            echo "androidStoreFile=quickpatch-release.jks"
+            echo 'org.gradle.parallel=true'
+            echo 'org.gradle.jvmargs=-Xmx2048m'
+          } >> gradle.properties
+          ./gradlew :manager:buildRelease
+
+      - name: Package release
+        run: |
+          mkdir -p dist
+          APK=$(find work/LSPatch/manager/build/outputs/apk/release work/LSPatch/out/release -name '*.apk' -type f 2>/dev/null | head -n 1)
+          test -n "$APK"
+          cp "$APK" dist/DLsiteSound-Rootless-Patcher-${{ github.ref_name }}.apk
+          git clone --depth 1 --branch v2.1.0 https://github.com/ariinyume/DLSiteSoundFloatingSubtitle.git work/DLsiteFloat-src
+          rm -rf work/LSPatch/.git work/DLsiteFloat-src/.git
+          cp README.md THIRD_PARTY.md LICENSE work/LSPatch/
+          tar -C work -czf dist/DLsiteSound-Rootless-Patcher-${{ github.ref_name }}-combined-source.tar.gz LSPatch DLsiteFloat-src
+          (cd dist && sha256sum * > SHA256SUMS.txt)
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" dist/*             --title "DLsiteSound Rootless Patcher ${{ github.ref_name }}"             --generate-notes

@@ -13,7 +13,7 @@ EXPECTED_ACTIVITY = b"QuickPatchActivity"
 EXPECTED_TARGET = b"jp.co.eisys.dlsitesound"
 EXPECTED_MODULE_PACKAGE = b"io.github.ariinyume.dlsitesoundfloat"
 EXPECTED_MODULE_SHA256 = "c7c15e16f8afd7b3266ed6d38d08b0380e8ae9fc80a8a5e8a05a039fa86eede1"
-MODULE_ASSET = "assets/quickpatch/DLsiteFloat-2.1.0-debug.apk"
+MODULE_ASSET = "assets/quickpatch/DLsiteFloat-2.1.0-rootless-v1.apk"
 V2_BLOCK_ID = 0x7109871A
 
 

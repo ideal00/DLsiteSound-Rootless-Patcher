@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     tags: [ 'v*' ]
+    branches: [ 'release/v*' ]
 
 permissions:
   contents: write
@@ -11,6 +12,16 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve release tag
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "branch" ]]; then
+            RELEASE_TAG="${GITHUB_REF_NAME#release/}"
+          else
+            RELEASE_TAG="$GITHUB_REF_NAME"
+          fi
+          [[ "$RELEASE_TAG" == v* ]]
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
@@ -95,7 +106,7 @@ jobs:
           mkdir -p dist
           APK=$(find work/LSPatch/manager/build/outputs/apk/release work/LSPatch/out/release -name '*.apk' -type f 2>/dev/null | head -n 1)
           test -n "$APK"
-          cp "$APK" dist/DLsiteSound-Rootless-Patcher-${{ github.ref_name }}.apk
+          cp "$APK" dist/DLsiteSound-Rootless-Patcher-${{ env.RELEASE_TAG }}.apk
           rm -rf work/LSPatch/.git work/DLsiteFloat-src/.git
           cp README.md THIRD_PARTY.md LICENSE work/LSPatch/
           mkdir -p work/Rootless-Patcher-src
@@ -106,21 +117,24 @@ jobs:
             --exclude='*/.kotlin' --exclude='*/.kotlin/*' \
             --exclude='LSPatch/out' --exclude='LSPatch/out/*' \
             --exclude='*/.git' --exclude='*/.git/*' \
-            -czf dist/DLsiteSound-Rootless-Patcher-${{ github.ref_name }}-combined-source.tar.gz \
+            -czf dist/DLsiteSound-Rootless-Patcher-${{ env.RELEASE_TAG }}-combined-source.tar.gz \
             LSPatch DLsiteFloat-src Rootless-Patcher-src
           (
             cd dist
             sha256sum \
-              DLsiteSound-Rootless-Patcher-${{ github.ref_name }}.apk \
-              DLsiteSound-Rootless-Patcher-${{ github.ref_name }}-combined-source.tar.gz \
+              DLsiteSound-Rootless-Patcher-${{ env.RELEASE_TAG }}.apk \
+              DLsiteSound-Rootless-Patcher-${{ env.RELEASE_TAG }}-combined-source.tar.gz \
               > SHA256SUMS.txt
           )
 
       - name: Verify release APK
-        run: python3 scripts/verify_built_apk.py dist/DLsiteSound-Rootless-Patcher-${{ github.ref_name }}.apk release
+        run: python3 scripts/verify_built_apk.py dist/DLsiteSound-Rootless-Patcher-${{ env.RELEASE_TAG }}.apk release
 
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ github.ref_name }}" dist/*             --title "DLsiteSound Rootless Patcher ${{ github.ref_name }}"             --generate-notes
+          gh release create "${{ env.RELEASE_TAG }}" dist/* \
+            --target "${{ github.sha }}" \
+            --title "DLsiteSound Rootless Patcher ${{ env.RELEASE_TAG }}" \
+            --generate-notes

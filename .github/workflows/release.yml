@@ -43,7 +43,7 @@ jobs:
           python3 scripts/apply_overlay.py work/LSPatch
 
       - name: Use official libxposed 102 Maven artifacts
-        run: python3 scripts/patch_vector_libxposed.py work/LSPatch/core
+        run: python3 scripts/patch_vector_libxposed.py work/LSPatch
 
       - name: Bundle DLsiteFloat and verify checksum
         run: |

@@ -47,7 +47,7 @@ jobs:
 
       - name: Prepare pinned DLsiteFloat source + playback-control overlay
         run: |
-          scripts/prepare_dlsitesfloat.sh work/DLsiteFloat-src
+          bash scripts/prepare_dlsitesfloat.sh work/DLsiteFloat-src
           python3 scripts/verify_no_dlsitesound_apk.py .
 
       - uses: actions/setup-java@v5
@@ -61,7 +61,7 @@ jobs:
           version: 1.12.0
 
       - name: Build custom DLsiteFloat module
-        run: scripts/build_dlsitesfloat.sh work/DLsiteFloat-src work/LSPatch/manager/src/main/assets/quickpatch
+        run: bash scripts/build_dlsitesfloat.sh work/DLsiteFloat-src work/LSPatch/manager/src/main/assets/quickpatch
 
       - name: Configure signing and build
         working-directory: work/LSPatch

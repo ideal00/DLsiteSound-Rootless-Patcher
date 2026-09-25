@@ -23,8 +23,8 @@ git -C "$UPSTREAM/core" submodule update --init --recursive \
 python3 "$ROOT/scripts/patch_vector_libxposed.py" "$UPSTREAM"
 python3 "$ROOT/scripts/apply_overlay.py" "$UPSTREAM"
 
-"$ROOT/scripts/prepare_dlsitesfloat.sh" "$WORK/DLsiteFloat-src"
-"$ROOT/scripts/build_dlsitesfloat.sh" "$WORK/DLsiteFloat-src" "$UPSTREAM/manager/src/main/assets/quickpatch"
+bash "$ROOT/scripts/prepare_dlsitesfloat.sh" "$WORK/DLsiteFloat-src"
+bash "$ROOT/scripts/build_dlsitesfloat.sh" "$WORK/DLsiteFloat-src" "$UPSTREAM/manager/src/main/assets/quickpatch"
 
 python3 "$ROOT/scripts/verify_no_dlsitesound_apk.py" "$ROOT"
 

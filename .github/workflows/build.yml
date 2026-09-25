@@ -46,10 +46,10 @@ jobs:
       - name: Verify repository contains no DLsiteSound package
         run: python3 scripts/verify_no_dlsitesound_apk.py .
 
-      - name: Setup Java 21
+      - name: Setup Java 17 for DLsiteFloat
         uses: actions/setup-java@v5
         with:
-          java-version: '21'
+          java-version: '17'
           distribution: 'temurin'
 
       - name: Setup Gradle
@@ -65,6 +65,12 @@ jobs:
 
       - name: Build custom DLsiteFloat module
         run: bash scripts/build_dlsitesfloat.sh work/DLsiteFloat-src work/LSPatch/manager/src/main/assets/quickpatch
+
+      - name: Switch to Java 21 for LSPatch
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
       - name: Remove Android bundled CMake
         run: rm -rf "$ANDROID_HOME/cmake"

@@ -97,6 +97,9 @@ def main() -> None:
             b"io.github.ariinyume.dlsitesoundfloat",
             b"PlayerControlBridge",
             b"PlaybackControlsView",
+            b"panel_opacity_pct",
+            b"control_opacity_pct",
+            b"subtitle_font_size_sp",
         ):
             if needle not in module_dex:
                 fail(f"embedded custom DLsiteFloat is missing {needle!r}")

@@ -18,7 +18,8 @@ python3 - "$ASSET_DIR/$ASSET_NAME" <<'PY'
 import sys, zipfile, hashlib
 p=sys.argv[1]
 with zipfile.ZipFile(p) as z:
-    dex=z.read("classes.dex")
+    dex=b"".join(z.read(name) for name in z.namelist()
+                 if name.startswith("classes") and name.endswith(".dex"))
     for needle in (b"PlayerControlBridge", b"PlaybackControlsView", b"io.github.ariinyume.dlsitesoundfloat"):
         if needle not in dex:
             raise SystemExit(f"custom DLsiteFloat verification failed: missing {needle!r}")

@@ -86,7 +86,11 @@ def main() -> None:
         try:
             import io
             with zipfile.ZipFile(io.BytesIO(module)) as module_zip:
-                module_dex = module_zip.read("classes.dex")
+                module_dex = b"".join(
+                    module_zip.read(name)
+                    for name in module_zip.namelist()
+                    if name.startswith("classes") and name.endswith(".dex")
+                )
         except Exception as exc:
             fail(f"embedded DLsiteFloat is not a readable APK: {exc}")
         for needle in (

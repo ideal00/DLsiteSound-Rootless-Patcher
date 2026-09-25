@@ -29,21 +29,8 @@ jobs:
             external/lsplt \
             external/xz-embedded
 
-      - name: Checkout pinned libxposed API
-        uses: actions/checkout@v7
-        with:
-          repository: libxposed/api
-          ref: 39cac0845771547c9c67a3e3ce255af110a54a0e
-          path: work/LSPatch/core/xposed/libxposed
-          persist-credentials: false
-
-      - name: Checkout pinned libxposed service
-        uses: actions/checkout@v7
-        with:
-          repository: libxposed/service
-          ref: 3318940876192e29cf6ab07637e899e22a87ebf0
-          path: work/LSPatch/core/services/libxposed
-          persist-credentials: false
+      - name: Use official libxposed 102 Maven artifacts
+        run: python3 scripts/patch_vector_libxposed.py work/LSPatch/core
 
       - name: Apply quick-patcher overlay
         run: python3 scripts/apply_overlay.py work/LSPatch

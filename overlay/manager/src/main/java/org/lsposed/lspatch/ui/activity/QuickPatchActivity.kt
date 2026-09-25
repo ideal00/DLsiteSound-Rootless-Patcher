@@ -205,7 +205,7 @@ private fun QuickPatchScreen(
                     target != null &&
                     moduleFile != null &&
                     target?.alreadyPatched == false &&
-                    (patchStep is PatchStep.Idle || patchStep is PatchStep.Failed || patchStep is PatchStep.Done)
+                    (patchStep is PatchStep.Idle || patchStep is PatchStep.Failed)
 
             Button(
                 enabled = canStart,
@@ -248,7 +248,17 @@ private fun QuickPatchScreen(
             }
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(modifier = Modifier.weight(1f), onClick = { scope.launch { refresh() } }) {
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        scope.launch {
+                            if (patchStep is PatchStep.Done || patchStep is PatchStep.Failed) {
+                                PatchJobHost.acknowledge()
+                            }
+                            refresh()
+                        }
+                    },
+                ) {
                     Text("重新检测")
                 }
                 OutlinedButton(modifier = Modifier.weight(1f), onClick = openAdvanced) {
@@ -387,15 +397,19 @@ private fun detectTarget(context: Context): TargetSnapshot? {
 
 private fun ensureInstallPermission(context: Context): Boolean {
     if (context.packageManager.canRequestPackageInstalls()) return true
-    runCatching {
-        context.startActivity(
-            Intent(
-                Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                Uri.parse("package:${context.packageName}"),
+    val opened =
+        runCatching {
+            context.startActivity(
+                Intent(
+                    Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                    Uri.parse("package:${context.packageName}"),
+                )
             )
-        )
-    }
-    return false
+            true
+        }.getOrDefault(false)
+    // If an OEM removed the per-source settings activity, let PackageInstaller try its own
+    // confirmation path rather than making installation impossible from this UI.
+    return !opened
 }
 
 private fun prepareBundledModule(context: Context): File {

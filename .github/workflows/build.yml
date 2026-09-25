@@ -119,6 +119,9 @@ jobs:
           test -n "$APK"
           cp "$APK" dist/DLsiteSound-Rootless-Patcher-arm64-ci.apk
 
+      - name: Verify built APK
+        run: python3 scripts/verify_built_apk.py dist/DLsiteSound-Rootless-Patcher-arm64-ci.apk ci-arm64
+
       - name: Build corresponding-source archive
         run: |
           git clone --depth 1 --branch v2.1.0 https://github.com/ariinyume/DLSiteSoundFloatingSubtitle.git work/DLsiteFloat-src

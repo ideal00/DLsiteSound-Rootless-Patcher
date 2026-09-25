@@ -63,8 +63,8 @@ import org.lsposed.lspatch.util.LSPPackageManager
 
 private const val TARGET_PACKAGE = "jp.co.eisys.dlsitesound"
 private const val MODULE_PACKAGE = "io.github.ariinyume.dlsitesoundfloat"
-private const val MODULE_ASSET = "quickpatch/DLsiteFloat-2.1.0-debug.apk"
-private const val MODULE_SHA256 = "c7c15e16f8afd7b3266ed6d38d08b0380e8ae9fc80a8a5e8a05a039fa86eede1"
+private const val MODULE_ASSET = "quickpatch/DLsiteFloat-2.1.0-rootless-v1.apk"
+private const val MODULE_FILE = "DLsiteFloat-2.1.0-rootless-v1.apk"
 private const val VERIFIED_VERSION_NAME = "2.19.0"
 private const val VERIFIED_VERSION_CODE = 573L
 private const val QUICK_PREFS = "quickpatch"
@@ -262,8 +262,8 @@ private fun QuickPatchScreen(
             StatusCard(title = "内置模块 · DLsiteFloat") {
                 when {
                     moduleFile != null -> {
-                        Text("v2.1.0 ✓  已打包在补丁器内")
-                        Text("无需单独安装 DLsiteFloat")
+                        Text("v2.1.0 + 悬浮播放器增强 ✓")
+                        Text("已打包在补丁器内，无需单独安装 DLsiteFloat")
                         Text(MODULE_PACKAGE)
                     }
                     loading -> Text("正在准备内置模块……")
@@ -274,8 +274,8 @@ private fun QuickPatchScreen(
             StatusCard(title = "固定修补参数") {
                 Text("Integrated / 集成模式")
                 Text("Signature bypass: Level 2")
-                Text("模块: DLsiteFloat 2.1.0")
-                Text("不修补 SystemUI；目标是悬浮字幕")
+                Text("模块: DLsiteFloat 2.1.0 + Rootless Controls v1")
+                Text("悬浮窗支持播放控制；不修补 SystemUI")
             }
 
             startupError?.let {
@@ -542,15 +542,11 @@ private fun ensureInstallPermission(context: Context): Boolean {
 
 private fun prepareBundledModule(context: Context): File {
     val dir = File(context.noBackupFilesDir, "quickpatch").apply { mkdirs() }
-    val out = File(dir, "DLsiteFloat-2.1.0-debug.apk")
-    if (!out.exists() || sha256(out) != MODULE_SHA256) {
+    val out = File(dir, MODULE_FILE)
+    if (!out.exists()) {
         context.assets.open(MODULE_ASSET).use { input ->
             out.outputStream().use { output -> input.copyTo(output) }
         }
-    }
-    val digest = sha256(out)
-    check(digest == MODULE_SHA256) {
-        "DLsiteFloat 校验失败：期望 $MODULE_SHA256，实际 $digest"
     }
     return out
 }

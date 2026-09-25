@@ -2,6 +2,7 @@ package org.lsposed.lspatch.ui.activity
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -34,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -55,7 +57,9 @@ import org.lsposed.lspatch.data.model.PatchStage
 import org.lsposed.lspatch.data.model.PatchStep
 import org.lsposed.lspatch.data.model.PatchTarget
 import org.lsposed.lspatch.data.repository.PatchJobHost
+import org.lsposed.lspatch.data.repository.PatchOutputStore
 import org.lsposed.lspatch.data.repository.PatchRequestStore
+import org.lsposed.lspatch.util.LSPPackageManager
 
 private const val TARGET_PACKAGE = "jp.co.eisys.dlsitesound"
 private const val MODULE_PACKAGE = "io.github.ariinyume.dlsitesoundfloat"
@@ -63,6 +67,8 @@ private const val MODULE_ASSET = "quickpatch/DLsiteFloat-2.1.0-debug.apk"
 private const val MODULE_SHA256 = "c7c15e16f8afd7b3266ed6d38d08b0380e8ae9fc80a8a5e8a05a039fa86eede1"
 private const val VERIFIED_VERSION_NAME = "2.19.0"
 private const val VERIFIED_VERSION_CODE = 573L
+private const val QUICK_PREFS = "quickpatch"
+private const val PREF_PENDING_EXTERNAL_UNINSTALL = "pending_external_uninstall"
 
 private data class TargetSnapshot(
     val label: String,
@@ -76,6 +82,13 @@ private data class TargetSnapshot(
 }
 
 class QuickPatchActivity : ComponentActivity() {
+    private val resumeTick = mutableIntStateOf(0)
+
+    override fun onResume() {
+        super.onResume()
+        resumeTick.intValue++
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -83,6 +96,7 @@ class QuickPatchActivity : ComponentActivity() {
             MaterialTheme {
                 Surface(Modifier.fillMaxSize()) {
                     QuickPatchScreen(
+                        resumeTick = resumeTick.intValue,
                         openAdvanced = { startActivity(Intent(this, MainActivity::class.java)) },
                         openOverlaySettings = {
                             runCatching {
@@ -107,6 +121,7 @@ class QuickPatchActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun QuickPatchScreen(
+    resumeTick: Int,
     openAdvanced: () -> Unit,
     openOverlaySettings: () -> Unit,
     launchTarget: () -> Unit,
@@ -114,9 +129,16 @@ private fun QuickPatchScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     val scope = rememberCoroutineScope()
     val patchStep by PatchJobHost.step.collectAsState()
+    val prefs = remember { context.getSharedPreferences(QUICK_PREFS, Context.MODE_PRIVATE) }
 
     var target by remember { mutableStateOf<TargetSnapshot?>(null) }
     var moduleFile by remember { mutableStateOf<File?>(null) }
+    var recoveredOutputs by remember { mutableStateOf<List<File>>(emptyList()) }
+    var recoveryInstallStatus by remember { mutableStateOf<String?>(null) }
+    var recoveryBusy by remember { mutableStateOf(false) }
+    var externalUninstallPending by remember {
+        mutableStateOf(prefs.getBoolean(PREF_PENDING_EXTERNAL_UNINSTALL, false))
+    }
     var startupError by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(true) }
 
@@ -126,17 +148,82 @@ private fun QuickPatchScreen(
         runCatching {
             val prepared = withContext(Dispatchers.IO) { prepareBundledModule(context) }
             val detected = withContext(Dispatchers.IO) { detectTarget(context) }
-            prepared to detected
-        }.onSuccess { (module, detected) ->
+            val outputs = PatchOutputStore.outputs(TARGET_PACKAGE)
+            Triple(prepared, detected, outputs)
+        }.onSuccess { (module, detected, outputs) ->
             moduleFile = module
             target = detected
+            recoveredOutputs = outputs
         }.onFailure {
             startupError = it.message ?: it.javaClass.simpleName
         }
         loading = false
     }
 
-    LaunchedEffect(Unit) { refresh() }
+    suspend fun installRecoveredOutputs(files: List<File>) {
+        if (files.isEmpty() || recoveryBusy) return
+        recoveryBusy = true
+        recoveryInstallStatus = "正在打开系统安装器……"
+        val (status, message) = LSPPackageManager.installFiles(files, useShizuku = false)
+        if (status == PackageInstaller.STATUS_SUCCESS) {
+            recoveryInstallStatus = "安装成功 ✓"
+            PatchOutputStore.discard(TARGET_PACKAGE)
+            recoveredOutputs = emptyList()
+            refresh()
+        } else {
+            recoveryInstallStatus =
+                "安装失败：${message ?: "PackageInstaller status $status"}"
+        }
+        recoveryBusy = false
+    }
+
+    suspend fun continueAfterExternalUninstallIfReady() {
+        if (!prefs.getBoolean(PREF_PENDING_EXTERNAL_UNINSTALL, false)) return
+        val detected = withContext(Dispatchers.IO) { detectTarget(context) }
+        if (detected != null) return
+
+        prefs.edit().putBoolean(PREF_PENDING_EXTERNAL_UNINSTALL, false).apply()
+        externalUninstallPending = false
+
+        val current = PatchJobHost.step.value
+        if (current is PatchStep.NeedsUninstall) {
+            // The user already confirmed the destructive step and the package is now absent.
+            // Calling install(false) cannot ask for uninstall again, so it proceeds straight to
+            // the split-aware PackageInstaller session using the files already produced.
+            PatchJobHost.install(uninstallFirst = false)
+            return
+        }
+
+        // Process/activity recreation loses PatchJobHost's in-memory state, but the patched APKs
+        // deliberately live in noBackupFilesDir. Recover them instead of forcing a full re-patch.
+        val outputs = PatchOutputStore.outputs(TARGET_PACKAGE)
+        recoveredOutputs = outputs
+        if (outputs.isNotEmpty()) {
+            installRecoveredOutputs(outputs)
+        } else {
+            recoveryInstallStatus = "官方版已卸载，但没有找到可恢复的修补输出。"
+        }
+    }
+
+    LaunchedEffect(resumeTick) {
+        refresh()
+        continueAfterExternalUninstallIfReady()
+
+        // Some OEM installers complete the install but omit the final callback. The package itself
+        // is the authoritative result, so recognise it on return and clean stale output.
+        val installed = withContext(Dispatchers.IO) { detectTarget(context) }
+        if (installed?.alreadyPatched == true) {
+            target = installed
+            if (recoveredOutputs.isNotEmpty()) {
+                PatchOutputStore.discard(TARGET_PACKAGE)
+                recoveredOutputs = emptyList()
+            }
+            if (recoveryBusy || recoveryInstallStatus != null) {
+                recoveryInstallStatus = "安装成功 ✓"
+                recoveryBusy = false
+            }
+        }
+    }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("DLsiteSound 无 Root 字幕补丁器") }) },
@@ -154,6 +241,11 @@ private fun QuickPatchScreen(
             StatusCard(title = "DLsiteSound") {
                 when {
                     loading -> Text("正在检测已安装应用……")
+                    target == null && recoveredOutputs.isNotEmpty() -> {
+                        Text("当前未安装 DLsiteSound。")
+                        Text("检测到上一次已生成的修补输出：基础包 + ${recoveredOutputs.size - 1} 个分包 ✓")
+                        Text("可以直接继续安装，无需重新安装官方版再修补。")
+                    }
                     target == null -> Text("未检测到 $TARGET_PACKAGE。请先从官方渠道安装 DLsiteSound。")
                     else -> {
                         val t = target!!
@@ -190,15 +282,45 @@ private fun QuickPatchScreen(
                 StatusCard(title = "准备失败") { Text(it) }
             }
 
+            if (target == null && recoveredOutputs.isNotEmpty()) {
+                StatusCard(title = "可恢复的修补结果") {
+                    Text("共 ${recoveredOutputs.size} 个 APK，文件仍保存在补丁器私有目录。")
+                    recoveryInstallStatus?.let { Text(it) }
+                    Button(
+                        enabled = !recoveryBusy,
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            if (!ensureInstallPermission(context)) return@Button
+                            val files = recoveredOutputs
+                            scope.launch { installRecoveredOutputs(files) }
+                        },
+                    ) {
+                        Text(if (recoveryBusy) "正在安装……" else "继续安装已修补版本")
+                    }
+                }
+            }
+
             PatchStateCard(
                 step = patchStep,
                 onInstall = {
                     if (ensureInstallPermission(context)) PatchJobHost.install()
                 },
                 onConfirmUninstall = {
-                    if (ensureInstallPermission(context)) PatchJobHost.install(uninstallFirst = true)
+                    if (!ensureInstallPermission(context)) return@PatchStateCard
+                    prefs.edit().putBoolean(PREF_PENDING_EXTERNAL_UNINSTALL, true).apply()
+                    externalUninstallPending = true
+                    val intent =
+                        Intent(Intent.ACTION_DELETE, Uri.parse("package:$TARGET_PACKAGE"))
+                            .putExtra(Intent.EXTRA_RETURN_RESULT, true)
+                    val opened = runCatching { context.startActivity(intent) }.isSuccess
+                    if (!opened) {
+                        prefs.edit().putBoolean(PREF_PENDING_EXTERNAL_UNINSTALL, false).apply()
+                        externalUninstallPending = false
+                        recoveryInstallStatus = "无法打开系统卸载界面。"
+                    }
                 },
                 onRetry = { PatchJobHost.retry() },
+                externalUninstallPending = externalUninstallPending,
             )
 
             val canStart =
@@ -315,6 +437,7 @@ private fun PatchStateCard(
     onInstall: () -> Unit,
     onConfirmUninstall: () -> Unit,
     onRetry: () -> Unit,
+    externalUninstallPending: Boolean,
 ) {
     if (step is PatchStep.Idle) return
 
@@ -336,9 +459,13 @@ private fun PatchStateCard(
             }
             is PatchStep.NeedsUninstall -> {
                 Text("检测到官方签名版本。Android 不允许不同签名直接覆盖安装。")
-                Text("继续会先卸载官方 DLsiteSound，并清除它的本地应用数据。")
+                Text("继续会先打开系统卸载界面；卸载完成返回后，补丁器会确认包已消失，再自动进入修补版安装。")
+                if (externalUninstallPending) {
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                    Text("已请求卸载。请完成系统确认；返回本页后会自动继续安装。")
+                }
                 Button(modifier = Modifier.fillMaxWidth(), onClick = onConfirmUninstall) {
-                    Text("我已备份，确认卸载并安装")
+                    Text(if (externalUninstallPending) "重新打开卸载界面" else "我已备份，确认卸载并安装")
                 }
             }
             is PatchStep.Uninstalling -> {

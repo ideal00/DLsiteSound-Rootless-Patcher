@@ -74,7 +74,10 @@ public final class PlaybackControlsView extends LinearLayout {
         buttons.setOrientation(HORIZONTAL);
         buttons.setGravity(Gravity.CENTER);
 
-        lockButton = action(locked ? "🔒" : "🔓", () -> {
+        lockButton = label(locked ? "🔒" : "🔓", 15);
+        lockButton.setClickable(true);
+        lockButton.setFocusable(true);
+        lockButton.setOnClickListener(v -> {
             locked = !locked;
             prefs.edit().putBoolean(PREF_LOCKED, locked).apply();
             lockButton.setText(locked ? "🔒" : "🔓");

@@ -3,14 +3,17 @@ from pathlib import Path
 import sys
 
 if len(sys.argv) != 2:
-    raise SystemExit("usage: patch_vector_libxposed.py /path/to/LSPatch/core")
+    raise SystemExit("usage: patch_vector_libxposed.py /path/to/LSPatch")
 
-root = Path(sys.argv[1]).resolve()
+lspatch = Path(sys.argv[1]).resolve()
+vector = lspatch / "core"
 
-xposed = root / "xposed/build.gradle.kts"
-daemon = root / "services/daemon-service/build.gradle.kts"
-if not xposed.exists() or not daemon.exists():
-    raise SystemExit(f"not a compatible pinned Vector tree: {root}")
+xposed = vector / "xposed/build.gradle.kts"
+daemon = vector / "services/daemon-service/build.gradle.kts"
+share_android = lspatch / "share/android/build.gradle.kts"
+
+if not xposed.exists() or not daemon.exists() or not share_android.exists():
+    raise SystemExit(f"not a compatible pinned LSPatch/Vector tree: {lspatch}")
 
 x = xposed.read_text(encoding="utf-8")
 old_x_sources = '''    sourceSets {
@@ -66,4 +69,19 @@ if old_d_deps not in d:
 d = d.replace(old_d_deps, new_d_deps, 1)
 daemon.write_text(d, encoding="utf-8")
 
-print("Vector libxposed source submodules replaced with official Maven Central 102.0.0 artifacts")
+s = share_android.read_text(encoding="utf-8")
+old_s_deps = '''dependencies {
+    implementation("vector:daemon-service")
+}
+'''
+new_s_deps = '''dependencies {
+    implementation("io.github.libxposed:service:102.0.0")
+    implementation("vector:daemon-service")
+}
+'''
+if old_s_deps not in s:
+    raise SystemExit("LSPatch share/android dependencies changed; refusing to patch blindly")
+s = s.replace(old_s_deps, new_s_deps, 1)
+share_android.write_text(s, encoding="utf-8")
+
+print("Historical libxposed source submodules replaced with official Maven Central 102.0.0 artifacts")

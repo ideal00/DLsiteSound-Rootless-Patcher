@@ -191,8 +191,12 @@ private fun QuickPatchScreen(
 
             PatchStateCard(
                 step = patchStep,
-                onInstall = { PatchJobHost.install() },
-                onConfirmUninstall = { PatchJobHost.install(uninstallFirst = true) },
+                onInstall = {
+                    if (ensureInstallPermission(context)) PatchJobHost.install()
+                },
+                onConfirmUninstall = {
+                    if (ensureInstallPermission(context)) PatchJobHost.install(uninstallFirst = true)
+                },
                 onRetry = { PatchJobHost.retry() },
             )
 
@@ -263,6 +267,10 @@ private fun QuickPatchScreen(
 
             Text(
                 "注意：官方版与修补版签名不同。需要卸载官方版时，Android 会清除 DLsiteSound 的本地应用数据、登录状态及应用内离线内容；补丁器不会在未确认时自动卸载。",
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
+                "在执行安装或卸载前，补丁器会先检查“允许来自此来源安装应用”权限。未开启时只会打开系统权限页，不会先卸载 DLsiteSound；开启后返回再点一次即可。",
                 style = MaterialTheme.typography.bodySmall,
             )
             Text(
@@ -374,6 +382,20 @@ private fun detectTarget(context: Context): TargetSnapshot? {
         apkPaths = paths,
         alreadyPatched = app.metaData?.containsKey("lspatch") == true,
     )
+}
+
+
+private fun ensureInstallPermission(context: Context): Boolean {
+    if (context.packageManager.canRequestPackageInstalls()) return true
+    runCatching {
+        context.startActivity(
+            Intent(
+                Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                Uri.parse("package:${context.packageName}"),
+            )
+        )
+    }
+    return false
 }
 
 private fun prepareBundledModule(context: Context): File {

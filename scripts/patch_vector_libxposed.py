@@ -75,7 +75,7 @@ old_s_deps = '''dependencies {
 }
 '''
 new_s_deps = '''dependencies {
-    implementation("io.github.libxposed:service:102.0.0")
+    implementation("io.github.libxposed:interface:102.0.0")
     implementation("vector:daemon-service")
 }
 '''

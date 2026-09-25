@@ -1,6 +1,6 @@
 # DLsiteSound Rootless Subtitle Patcher
 
-当前补丁器版本：**0.1.0-alpha.1**
+当前补丁器版本：**0.2.0**
 
 面向 Android 的 **无 Root DLsiteSound 字幕补丁器**。
 

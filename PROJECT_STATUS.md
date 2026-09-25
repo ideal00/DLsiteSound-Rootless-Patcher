@@ -1,33 +1,49 @@
 # Project status
 
-当前是 **v0.1 源码原型**，核心做法是直接复用 LSPatch v1.2 的 `ApkPatcher`、split 处理、签名和 `PackageInstaller` 流程，而不是重新实现 patch engine。
+核心无 Root 修补链路已经在真实 Android 设备上完成端到端验证。
 
-## 已完成
+## 已验证
 
-- 单用途 Quick Patcher Activity
 - 检测 `jp.co.eisys.dlsitesound`
-- 自动读取 `sourceDir + splitSourceDirs`
-- 对 2.19.0(573) 标记为已验证
-- 构造固定的 Integrated PatchRequest
-- 自动嵌入 DLsiteFloat v2.1.0
-- SHA-256 校验模块 APK
-- 调用 LSPatch PatchJobHost 修补/安装
-- 对不同签名安装先显示数据清除警告
-- Overlay permission 快捷入口
-- GitHub Actions 构建
-- Release 源码归档
-- 阻止源码仓库误带 DLsiteSound APK
+- 读取 `base.apk + splitSourceDirs`
+- DLsiteSound 2.19.0 (573) / base + 3 splits
+- LSPatch Integrated mode + signature bypass level 2
+- 完整四 ABI loader
+- 修补输出
+- 签名冲突识别
+- 系统卸载官方版
+- 卸载返回后继续安装修补版
+- 应用重启后恢复 patched outputs
+- 修补版安装
+- DLsiteFloat 悬浮字幕无 Root 正常使用
 
-## 需要真机验证
+## 当前开发：Rootless Controls v1
 
-由于当前执行环境不能运行 Android/Gradle 联网构建，也不能模拟 Android PackageInstaller，本原型需要在 GitHub Actions 编译并在真实 Android 设备上进行第一次验证。
+构建流程已经由“下载官方 DLsiteFloat APK”切换为：
 
-重点验证：
+```text
+固定 DLsiteFloat v2.1.0 commit
+→ 应用最小源码 patch
+→ 覆盖新增 PlayerControlBridge / PlaybackControlsView
+→ CI 编译模块
+→ 静态验证控制类存在
+→ 嵌入 LSPatch Quick Patcher
+```
 
-1. `QuickPatchActivity.kt` 是否与 pinned LSPatch v1.2 API 完全编译通过。
-2. 2.19.0(573) 的 `base + 3 splits` 是否显示正确。
-3. patch 输出是否仍是 4 个 APK。
-4. 系统卸载确认后，`PatchJobHost.install(uninstallFirst=true)` 是否能顺利继续安装。
-5. 新安装的 DLsiteSound 是否显示 DLsiteFloat 的悬浮字幕按钮。
+新增悬浮窗能力：
 
-若 CI 出现编译错误，只应根据 pinned upstream API 做小修，不应退回重新实现 patch engine。
+- 播放 / 暂停
+- ±10 秒
+- 上一轨 / 下一轨
+- SeekBar + 当前时间 / 总时长
+- 控制层 5 秒自动隐藏
+- 锁定窗口
+- 窗口位置 / 大小跨进程持久化
+
+## 下一步真机回归
+
+1. 控制栏点击不触发窗口拖动。
+2. 锁定后禁止移动 / 缩放，但控制键仍可用。
+3. 上一轨 / 下一轨同步 DLsiteSound 自身 UI 与字幕。
+4. SeekBar 拖动时不会被实时进度抢回。
+5. 进程重建后窗口几何与锁定状态恢复。

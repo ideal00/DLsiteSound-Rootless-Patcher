@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 
 EXPECTED_APP_ID = b"io.github.dlsitesound.rootlesspatcher"
-EXPECTED_VERSION = "0.1.0-alpha.1".encode("utf-16le")
+EXPECTED_VERSION = "0.2.0".encode("utf-16le")
 EXPECTED_ACTIVITY = b"QuickPatchActivity"
 EXPECTED_TARGET = b"jp.co.eisys.dlsitesound"
 EXPECTED_MODULE_PACKAGE = b"io.github.ariinyume.dlsitesoundfloat"
@@ -109,8 +109,8 @@ def main() -> None:
         # Binary AXML keeps its string pool in UTF-16/UTF-8. Check both where useful.
         if EXPECTED_APP_ID not in manifest and EXPECTED_APP_ID.decode().encode("utf-16le") not in manifest:
             fail("patcher applicationId is not present in AndroidManifest.xml")
-        if EXPECTED_VERSION not in manifest and b"0.1.0-alpha.1" not in manifest:
-            fail("patcher versionName 0.1.0-alpha.1 is not present in AndroidManifest.xml")
+        if EXPECTED_VERSION not in manifest and b"0.2.0" not in manifest:
+            fail("patcher versionName 0.2.0 is not present in AndroidManifest.xml")
 
         for needle, label in (
             (EXPECTED_ACTIVITY, "QuickPatchActivity"),

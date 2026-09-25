@@ -79,7 +79,6 @@ private data class TargetSnapshot(
 class QuickPatchActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        lspApp.startBackgroundWork()
         enableEdgeToEdge()
         setContent {
             MaterialTheme {

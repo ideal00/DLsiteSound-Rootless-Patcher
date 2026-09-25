@@ -118,7 +118,6 @@ jobs:
           APK=$(find work/LSPatch/manager/build/outputs/apk/release work/LSPatch/out/release -name '*.apk' -type f 2>/dev/null | head -n 1)
           test -n "$APK"
           cp "$APK" dist/DLsiteSound-Rootless-Patcher.apk
-          sha256sum dist/DLsiteSound-Rootless-Patcher.apk > dist/SHA256SUMS.txt
 
       - name: Build corresponding-source archive
         run: |
@@ -127,7 +126,21 @@ jobs:
           cp README.md THIRD_PARTY.md LICENSE work/LSPatch/
           mkdir -p work/Rootless-Patcher-src
           cp -a .github overlay scripts README.md THIRD_PARTY.md LICENSE CHANGELOG.md PROJECT_STATUS.md .gitignore work/Rootless-Patcher-src/
-          tar -C work -czf dist/DLsiteSound-Rootless-Patcher-combined-source.tar.gz LSPatch DLsiteFloat-src Rootless-Patcher-src
+          tar -C work \
+            --exclude='*/build' --exclude='*/build/*' \
+            --exclude='*/.gradle' --exclude='*/.gradle/*' \
+            --exclude='*/.kotlin' --exclude='*/.kotlin/*' \
+            --exclude='LSPatch/out' --exclude='LSPatch/out/*' \
+            --exclude='*/.git' --exclude='*/.git/*' \
+            -czf dist/DLsiteSound-Rootless-Patcher-combined-source.tar.gz \
+            LSPatch DLsiteFloat-src Rootless-Patcher-src
+          (
+            cd dist
+            sha256sum \
+              DLsiteSound-Rootless-Patcher.apk \
+              DLsiteSound-Rootless-Patcher-combined-source.tar.gz \
+              > SHA256SUMS.txt
+          )
 
       - name: Upload APK and source
         uses: actions/upload-artifact@v7

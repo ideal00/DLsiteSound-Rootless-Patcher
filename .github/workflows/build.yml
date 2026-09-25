@@ -98,10 +98,10 @@ jobs:
           mkdir -p dist
           APK=$(find work/LSPatch/manager/build/outputs/apk/release work/LSPatch/out/release -name '*.apk' -type f 2>/dev/null | head -n 1)
           test -n "$APK"
-          cp "$APK" dist/DLsiteSound-Rootless-Patcher-arm64-ci.apk
+          cp "$APK" dist/DLsiteSound-Rootless-Patcher-full-ci.apk
 
       - name: Verify built APK
-        run: python3 scripts/verify_built_apk.py dist/DLsiteSound-Rootless-Patcher-arm64-ci.apk ci-arm64
+        run: python3 scripts/verify_built_apk.py dist/DLsiteSound-Rootless-Patcher-full-ci.apk full
 
       - name: Build corresponding-source archive
         run: |
@@ -121,7 +121,7 @@ jobs:
           (
             cd dist
             sha256sum \
-              DLsiteSound-Rootless-Patcher-arm64-ci.apk \
+              DLsiteSound-Rootless-Patcher-full-ci.apk \
               DLsiteSound-Rootless-Patcher-combined-source.tar.gz \
               > SHA256SUMS.txt
           )

@@ -8,18 +8,19 @@
 - License: GNU GPL v3
 - Source: https://github.com/JingMatrix/LSPatch
 
-本项目对 LSPatch Manager 增加了单用途 Quick Patcher UI，并修改 launcher/applicationId。发布二进制时应同时提供本项目构建产生的 combined-source。
+本项目对 LSPatch Manager 增加了单用途 Quick Patcher UI，并修改 launcher/applicationId。发布二进制时同时提供 combined-source。
 
 ## DLsiteFloat
 
 - Project: ariinyume/DLSiteSoundFloatingSubtitle
-- Version: v2.1.0
-- APK: `DLsiteFloat-2.1.0-debug.apk`
-- SHA-256: `c7c15e16f8afd7b3266ed6d38d08b0380e8ae9fc80a8a5e8a05a039fa86eede1`
+- Upstream version: v2.1.0
+- Pinned commit: `c8ca46a548115060ce0822e7e8b5ebb6b6d2b048`
 - License: GNU GPL v3
 - Source: https://github.com/ariinyume/DLSiteSoundFloatingSubtitle/tree/v2.1.0
 
-DLsiteFloat 的 APK 在构建阶段从其官方 GitHub Release 下载并嵌入补丁器资源。仓库本身不保存该二进制。
+构建时从固定上游源码编译，不再下载官方 Release APK。本仓库通过 `dlsitefloat-overlay/` 与
+`scripts/patch_dlsitesfloat.py` 增加 Rootless Controls v1（播放/暂停、seek、上下轨、进度条、
+自动隐藏控制栏、窗口锁定和几何持久化）。combined-source 包含实际参与构建的修改后源码。
 
 ## DLsiteSound
 

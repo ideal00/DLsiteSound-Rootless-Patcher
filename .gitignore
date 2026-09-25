@@ -1,0 +1,8 @@
+/work/
+/dist/
+*.jks
+*.keystore
+/local.properties
+.idea/
+.gradle/
+.DS_Store

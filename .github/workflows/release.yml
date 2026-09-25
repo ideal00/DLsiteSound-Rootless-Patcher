@@ -50,9 +50,10 @@ jobs:
           bash scripts/prepare_dlsitesfloat.sh work/DLsiteFloat-src
           python3 scripts/verify_no_dlsitesound_apk.py .
 
-      - uses: actions/setup-java@v5
+      - name: Setup Java 17 for DLsiteFloat
+        uses: actions/setup-java@v5
         with:
-          java-version: '21'
+          java-version: '17'
           distribution: 'temurin'
       - uses: gradle/actions/setup-gradle@v6
       - uses: android-actions/setup-android@v4
@@ -62,6 +63,12 @@ jobs:
 
       - name: Build custom DLsiteFloat module
         run: bash scripts/build_dlsitesfloat.sh work/DLsiteFloat-src work/LSPatch/manager/src/main/assets/quickpatch
+
+      - name: Switch to Java 21 for LSPatch
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
       - name: Configure signing and build
         working-directory: work/LSPatch

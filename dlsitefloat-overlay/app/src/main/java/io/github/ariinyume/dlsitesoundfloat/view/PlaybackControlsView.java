@@ -44,7 +44,7 @@ public final class PlaybackControlsView extends LinearLayout {
     private final SeekBar seekBar;
     private final TextView timeText;
     private final TextView playPause;
-    private final TextView lockButton;
+    private TextView lockButton;
     private final TextView settingsButton;
     private LinearLayout settingsPanel;
 

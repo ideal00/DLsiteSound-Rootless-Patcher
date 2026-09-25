@@ -29,6 +29,16 @@
 
 无 Root 模式只修补 DLsiteSound 本身，因此支持 **悬浮字幕**；需要 Hook `com.android.systemui` 的状态栏字幕不属于本项目目标。
 
+### 悬浮窗权限
+
+在 Integrated 模式中，DLsiteFloat 代码运行在 DLsiteSound 进程内，`FloatingWindowManager` 使用宿主 DLsiteSound 的 `Context` 创建 `TYPE_APPLICATION_OVERLAY` 窗口。因此最终需要授予“显示在其他应用上层”权限的是：
+
+```text
+jp.co.eisys.dlsitesound
+```
+
+而不是补丁器本身，也不需要额外安装一个独立的 DLsiteFloat App。安装修补版成功后，补丁器会提供快捷按钮直接打开 DLsiteSound 的悬浮窗权限页。
+
 ## 构建
 
 本仓库采用“overlay + 固定上游版本”的方式，避免把第三方源码手工复制一份后长期漂移。

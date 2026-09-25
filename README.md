@@ -4,7 +4,7 @@
 
 面向 Android 的 **无 Root DLsiteSound 字幕补丁器**。
 
-它基于 [JingMatrix/LSPatch](https://github.com/JingMatrix/LSPatch) v1.2 的补丁引擎，在用户自己的手机上读取已经安装的 DLsiteSound（`base.apk + split APKs`），以 **Integrated mode** 嵌入 [DLsiteSoundFloatingSubtitle](https://github.com/ariinyume/DLSiteSoundFloatingSubtitle) v2.1.0，然后交给 Android 安装器安装。
+它基于 [JingMatrix/LSPatch](https://github.com/JingMatrix/LSPatch) v1.2 的补丁引擎，在用户自己的手机上读取已经安装的 DLsiteSound（`base.apk + split APKs`），以 **Integrated mode** 嵌入基于 [DLsiteSoundFloatingSubtitle](https://github.com/ariinyume/DLSiteSoundFloatingSubtitle) v2.1.0 固定源码构建的增强模块，然后交给 Android 安装器安装。增强模块加入悬浮播放控制，但不改变字幕抓取/同步的核心逻辑。
 
 > **本项目不包含、不下载、不分发 DLsiteSound APK。** 用户必须自行从官方渠道安装 DLsiteSound。本项目仅对用户设备上已有的 APK 副本进行本地修补。
 
@@ -103,3 +103,18 @@ DLsiteSound-Rootless-Patcher-arm64-ci.apk
 - x86_64
 
 并且必须使用仓库 Secrets 中配置的稳定发布签名。
+
+
+## 增强悬浮播放器
+
+Rootless Controls v1 在原悬浮字幕窗上增加：
+
+- 播放 / 暂停
+- 上一轨 / 下一轨（优先调用 expo AudioPlaylist，失败时回退 Media3）
+- 前进 / 后退 10 秒
+- 可拖动进度条与当前时间 / 总时长
+- 5 秒无操作自动隐藏控制栏
+- 窗口锁定，避免点控制键时误拖
+- 窗口位置和尺寸跨进程持久化
+
+点击字幕面板可显示 / 隐藏控制栏。

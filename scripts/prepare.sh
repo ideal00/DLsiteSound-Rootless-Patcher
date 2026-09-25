@@ -12,7 +12,17 @@ rm -rf "$WORK"
 mkdir -p "$WORK"
 git clone https://github.com/JingMatrix/LSPatch.git "$UPSTREAM"
 git -C "$UPSTREAM" checkout "$LSPATCH_COMMIT"
-git -C "$UPSTREAM" submodule update --init --recursive
+git -C "$UPSTREAM" submodule update --init core
+git -C "$UPSTREAM/core" submodule update --init --recursive \
+  external/apache/commons-lang \
+  external/axml/manifest-editor \
+  external/dobby \
+  external/fmt \
+  external/lsplant \
+  external/lsplt \
+  external/xz-embedded
+
+python3 "$ROOT/scripts/patch_vector_libxposed.py" "$UPSTREAM/core"
 
 python3 "$ROOT/scripts/apply_overlay.py" "$UPSTREAM"
 

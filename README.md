@@ -1,6 +1,6 @@
 # DLsiteSound Rootless Subtitle Patcher
 
-当前补丁器版本：**0.2.0**
+当前补丁器版本：**0.3.0**
 
 面向 Android 的 **无 Root DLsiteSound 字幕补丁器**。
 
@@ -88,39 +88,44 @@ GitHub Actions 同时上传 **combined-source**，包含实际参与该次 APK �
 
 ## CI 测试包
 
-`Build APK` 工作流为了缩短验证时间，只编译 **arm64-v8a** 的 LSPatch native loader，因此其 APK 文件名明确为：
-
-```text
-DLsiteSound-Rootless-Patcher-arm64-ci.apk
-```
-
-它适合当前绝大多数现代 Android 手机进行真机测试，但**不作为正式发布包**。
-
-正式 GitHub Release 仍编译：
+`Build APK` 与正式 Release 都构建完整四 ABI 的 LSPatch loader：
 
 - arm64-v8a
 - armeabi-v7a
 - x86
 - x86_64
 
-并且必须使用仓库 Secrets 中配置的稳定发布签名。
+CI 产物名为 `DLsiteSound-Rootless-Patcher-full-ci.apk`。CI 包用于真机验证；正式 GitHub Release 仍要求仓库 Secrets 中配置稳定发布签名。
 
 
-## 增强悬浮播放器
+## 增强悬浮字幕 · Rootless Controls v2
 
-Rootless Controls v1 在原悬浮字幕窗上增加：
+默认采用“显示模式 / 编辑模式”双状态，避免悬浮面板长期遮挡其他应用。
 
+**显示模式（默认）**
+
+- 只显示当前字幕行，不显示大玻璃面板、关闭键、缩放手柄和播放控制栏
+- 主字幕窗口使用 `FLAG_NOT_TOUCHABLE`，点击会穿透到下面的应用
+- 使用独立的 36×48dp 边缘控制柄（✎），只有这个小区域可触摸
+- 字幕窗口 alpha 设为 0.78，兼顾 Android 12+ overlay touch 安全限制
+- 字体使用高反差阴影，不依赖屏幕截图或自动取色
+
+**编辑模式**
+
+点击边缘的 **✎** 进入，控制柄变为 **✓**：
+
+- 恢复玻璃面板与窗口触摸
+- 可拖动、缩放、关闭和锁定
 - 播放 / 暂停
-- 上一轨 / 下一轨（优先调用 expo AudioPlaylist，失败时回退 Media3）
+- 上一轨 / 下一轨
 - 前进 / 后退 10 秒
 - 可拖动进度条与当前时间 / 总时长
-- 5 秒无操作自动隐藏控制栏
-- 窗口锁定，避免点控制键时误拖
-- 窗口位置和尺寸跨进程持久化
-- ⚙ 内联设置面板
+- ⚙ 外观设置
 - 字幕面板透明度：20%–100%
 - 控制栏透明度：20%–100%
 - 字幕字号：13–24sp
-- 上述外观设置跨进程持久化
+- 字体颜色预设：白 / 黄 / 青 / 绿 / 粉 / 黑
+- 文字阴影根据字体亮度自动使用黑色或白色高反差阴影
+- 窗口位置、尺寸、锁定状态和外观设置持久化
 
-点击字幕面板可显示 / 隐藏控制栏；在控制栏点 **⚙** 展开外观设置。调整透明度和字号会实时生效。
+点 **✓** 退出编辑模式后，玻璃面板与操作控件立即消失，字幕重新进入点击穿透状态。

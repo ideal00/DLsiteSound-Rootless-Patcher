@@ -61,8 +61,8 @@ build_path = root / "manager/build.gradle.kts"
 build = build_path.read_text(encoding="utf-8")
 old = 'applicationId = defaultManagerPackageName'
 new = '''applicationId = "io.github.dlsitesound.rootlesspatcher"
-        versionCode = 2
-        versionName = "0.2.0"'''
+        versionCode = 3
+        versionName = "0.3.0"'''
 if old not in build:
     raise SystemExit("upstream manager applicationId line changed; refusing to patch blindly")
 build_path.write_text(build.replace(old, new, 1), encoding="utf-8")

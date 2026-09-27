@@ -181,18 +181,22 @@ public final class PlaybackControlsView extends LinearLayout {
 
         addColorPresetRow(settingsPanel);
 
-        TextView blackLyricsButton = action(
+        TextView blackLyricsButton = label(
                 FloatingWindowManager.getInstance().isBlackBackdropEnabled()
                         ? "◼ 退出纯黑歌词模式"
                         : "◼ 进入纯黑歌词模式",
-                () -> {
-                    boolean enabled = FloatingWindowManager.getInstance().toggleBlackBackdrop();
-                    blackLyricsButton.setText(enabled
-                            ? "◼ 退出纯黑歌词模式"
-                            : "◼ 进入纯黑歌词模式");
-                    armAutoHide();
-                });
+                13);
+        blackLyricsButton.setPadding(dp(8), 0, dp(8), 0);
+        blackLyricsButton.setClickable(true);
+        blackLyricsButton.setFocusable(true);
         blackLyricsButton.setContentDescription("切换纯黑歌词背景");
+        blackLyricsButton.setOnClickListener(v -> {
+            boolean enabled = FloatingWindowManager.getInstance().toggleBlackBackdrop();
+            blackLyricsButton.setText(enabled
+                    ? "◼ 退出纯黑歌词模式"
+                    : "◼ 进入纯黑歌词模式");
+            armAutoHide();
+        });
         settingsPanel.addView(blackLyricsButton, new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, dp(40)));
 

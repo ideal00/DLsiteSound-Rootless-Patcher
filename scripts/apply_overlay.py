@@ -68,14 +68,15 @@ if old not in build:
 build_path.write_text(build.replace(old, new, 1), encoding="utf-8")
 
 
+
 root_build_path = root / "build.gradle.kts"
 root_build = root_build_path.read_text(encoding="utf-8")
-old_versions = '''            versionCode = verCode
-            versionName = verName'''
-new_versions = '''            versionCode = if (project.name == "manager") 3 else verCode
-            versionName = if (project.name == "manager") "0.3.0" else verName'''
-if old_versions not in root_build:
-    raise SystemExit("upstream root version config changed; refusing to patch blindly")
-root_build_path.write_text(root_build.replace(old_versions, new_versions, 1), encoding="utf-8")
+old_ver_code = 'val verCode by extra(commitCount)'
+old_ver_name = 'val verName by extra("1.2")'
+if old_ver_code not in root_build or old_ver_name not in root_build:
+    raise SystemExit("upstream root version declarations changed; refusing to patch blindly")
+root_build = root_build.replace(old_ver_code, 'val verCode by extra(3)', 1)
+root_build = root_build.replace(old_ver_name, 'val verName by extra("0.3.0")', 1)
+root_build_path.write_text(root_build, encoding="utf-8")
 
 print("Overlay applied successfully")

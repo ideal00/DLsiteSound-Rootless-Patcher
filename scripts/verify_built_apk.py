@@ -99,7 +99,9 @@ def main() -> None:
             b"PlaybackControlsView",
             b"panel_opacity_pct",
             b"control_opacity_pct",
-            b"subtitle_font_size_sp",\n            b"subtitle_text_color",\n            b"DISPLAY_CLICK_THROUGH",
+            b"subtitle_font_size_sp",
+            b"subtitle_text_color",
+            b"DISPLAY_CLICK_THROUGH",
         ):
             if needle not in module_dex:
                 fail(f"embedded custom DLsiteFloat is missing {needle!r}")

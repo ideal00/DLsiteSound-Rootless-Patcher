@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="${1:-$ROOT/work/DLsiteFloat-src}"
 ASSET_DIR="${2:-$ROOT/work/LSPatch/manager/src/main/assets/quickpatch}"
-ASSET_NAME="DLsiteFloat-2.1.0-rootless-v1.apk"
+ASSET_NAME="DLsiteFloat-2.1.0-rootless-v2.apk"
 test -f "$SRC/gradlew"
 chmod +x "$SRC/gradlew"
 (
@@ -20,7 +20,7 @@ p=sys.argv[1]
 with zipfile.ZipFile(p) as z:
     dex=b"".join(z.read(name) for name in z.namelist()
                  if name.startswith("classes") and name.endswith(".dex"))
-    for needle in (b"PlayerControlBridge", b"PlaybackControlsView", b"io.github.ariinyume.dlsitesoundfloat"):
+    for needle in (b"PlayerControlBridge", b"PlaybackControlsView", b"subtitle_text_color", b"DISPLAY_CLICK_THROUGH", b"io.github.ariinyume.dlsitesoundfloat"):
         if needle not in dex:
             raise SystemExit(f"custom DLsiteFloat verification failed: missing {needle!r}")
 print("Custom DLsiteFloat verified:", p)

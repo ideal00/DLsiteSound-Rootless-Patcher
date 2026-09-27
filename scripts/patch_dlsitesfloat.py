@@ -30,50 +30,90 @@ patch(p, '                protected Object after(XposedInterface.Chain chain, Ob
       "PlayerSourceHook observe playlist")
 
 p = "app/src/main/java/io/github/ariinyume/dlsitesoundfloat/view/FloatingSubtitleView.java"
+patch(p, "import android.graphics.Paint;\n",
+      "import android.graphics.Color;\nimport android.graphics.Paint;\n",
+      "FloatingSubtitleView Color import")
 patch(p, "    private CloseButtonView closeBtn;\n",
-      "    private CloseButtonView closeBtn;\n    private PlaybackControlsView playbackControls;\n",
+      "    private CloseButtonView closeBtn;\n    private PlaybackControlsView playbackControls;\n    private GripIndicatorView grip;\n    private boolean editMode = false;\n",
       "FloatingSubtitleView controls field")
 patch(p, "    public void onPanelTapped() {\n        if (closeBtn == null) {\n",
-      "    public void onPanelTapped() {\n        if (playbackControls != null) { playbackControls.toggleControls(); }\n        if (closeBtn == null) {\n",
+      "    public void onPanelTapped() {\n        if (!editMode) return;\n        if (playbackControls != null) { playbackControls.toggleControls(); }\n        if (closeBtn == null) {\n",
       "FloatingSubtitleView panel tap")
 patch(p, "        panel.setAlpha(blurActive ? 242 : 255);\n",
       "        int opacityPct = getContext().getSharedPreferences(PlaybackControlsView.PREFS, Context.MODE_PRIVATE)\n                .getInt(PlaybackControlsView.PREF_PANEL_OPACITY, PlaybackControlsView.DEFAULT_PANEL_OPACITY);\n        opacityPct = Math.max(20, Math.min(100, opacityPct));\n        panel.setAlpha(Math.round(255f * opacityPct / 100f));\n",
       "FloatingSubtitleView panel opacity")
+patch(p, "    private void applyPanelBackground() {\n        // v13",
+      "    private void applyPanelBackground() {\n        if (!editMode) { setBackground(null); return; }\n        // v13",
+      "FloatingSubtitleView transparent display mode")
 patch(p, "        hint.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);\n",
       "        hint.setTextSize(TypedValue.COMPLEX_UNIT_SP, Math.max(12f, getSubtitleFontSizeSp() - 3f));\n",
       "FloatingSubtitleView hint font size")
 patch(p, "            styleLine(tv, 18f, 0xFFFFFFFF, 1.0f, false);\n",
-      "            styleLine(tv, getSubtitleFontSizeSp(), 0xFFFFFFFF, 1.0f, false);\n",
+      "            styleLine(tv, getSubtitleFontSizeSp(), getSubtitleTextColor(), 1.0f, false);\n",
       "FloatingSubtitleView mirrored font size")
 patch(p, "                styleLine(tv, BASE_TEXT_SP * CURRENT_SCALE, 0xFFFFFFFF, 1.0f, true);\n",
-      "                styleLine(tv, getSubtitleFontSizeSp() * CURRENT_SCALE, 0xFFFFFFFF, 1.0f, true);\n",
+      "                styleLine(tv, getSubtitleFontSizeSp() * CURRENT_SCALE, getSubtitleTextColor(), 1.0f, true);\n",
       "FloatingSubtitleView current font size")
 patch(p, "                    styleLine(tv, 15f, 0x99FFFFFF, 0.35f, false);\n",
-      "                    styleLine(tv, Math.max(11f, getSubtitleFontSizeSp() - 2f), 0x99FFFFFF, 0.35f, false);\n",
+      "                    styleLine(tv, Math.max(11f, getSubtitleFontSizeSp() - 2f), getSubtitleTextColor(), 0.35f, false);\n",
       "FloatingSubtitleView context font size")
 patch(p, "                BASE_TEXT_SP * CURRENT_SCALE, getContext().getResources().getDisplayMetrics());\n",
       "                getSubtitleFontSizeSp() * CURRENT_SCALE, getContext().getResources().getDisplayMetrics());\n",
       "FloatingSubtitleView measurement font size")
 patch(p, "    /** 重算并把当前字幕行滚动到悬浮窗垂直居中（缩放窗口后调用；v20：不带动画，避免拖拽时抖动）。 */\n",
-      "    private float getSubtitleFontSizeSp() {\n        int value = getContext().getSharedPreferences(PlaybackControlsView.PREFS, Context.MODE_PRIVATE)\n                .getInt(PlaybackControlsView.PREF_FONT_SIZE_SP, PlaybackControlsView.DEFAULT_FONT_SIZE_SP);\n        return Math.max(13, Math.min(24, value));\n    }\n\n    private void applyAppearanceSettings() {\n        applyPanelBackground();\n        if (hint != null) {\n            hint.setTextSize(TypedValue.COMPLEX_UNIT_SP, Math.max(12f, getSubtitleFontSizeSp() - 3f));\n        }\n        lastRenderKey = null;\n        updateFromRepository();\n        requestLayout();\n    }\n\n    /** 重算并把当前字幕行滚动到悬浮窗垂直居中（缩放窗口后调用；v20：不带动画，避免拖拽时抖动）。 */\n",
+      "    private float getSubtitleFontSizeSp() {\n        int value = getContext().getSharedPreferences(PlaybackControlsView.PREFS, Context.MODE_PRIVATE)\n                .getInt(PlaybackControlsView.PREF_FONT_SIZE_SP, PlaybackControlsView.DEFAULT_FONT_SIZE_SP);\n        return Math.max(13, Math.min(24, value));\n    }\n\n    private int getSubtitleTextColor() {\n        return getContext().getSharedPreferences(PlaybackControlsView.PREFS, Context.MODE_PRIVATE)\n                .getInt(PlaybackControlsView.PREF_TEXT_COLOR, PlaybackControlsView.DEFAULT_TEXT_COLOR);\n    }\n\n    private int getContrastShadowColor() {\n        int c = getSubtitleTextColor();\n        double luminance = (0.2126 * Color.red(c) + 0.7152 * Color.green(c) + 0.0722 * Color.blue(c)) / 255.0;\n        return luminance > 0.48 ? 0xE6000000 : 0xE6FFFFFF;\n    }\n\n    public void setEditMode(boolean edit) {\n        editMode = edit;\n        applyPanelBackground();\n        if (grip != null) grip.setVisibility(edit ? VISIBLE : GONE);\n        if (closeBtn != null) {\n            closeBtnHandler.removeCallbacks(closeBtnHideTask);\n            closeBtn.setVisibility(GONE);\n        }\n        if (playbackControls != null) {\n            if (edit) playbackControls.showControls(); else playbackControls.hideControls();\n        }\n        lastRenderKey = null;\n        updateFromRepository();\n        requestLayout();\n        invalidate();\n    }\n\n    public boolean isEditMode() { return editMode; }\n\n    private void applyAppearanceSettings() {\n        applyPanelBackground();\n        if (hint != null) {\n            hint.setTextSize(TypedValue.COMPLEX_UNIT_SP, Math.max(12f, getSubtitleFontSizeSp() - 3f));\n            hint.setTextColor(getSubtitleTextColor());\n            hint.setShadowLayer(TEXT_SHADOW_RADIUS, 0f, dp(1), getContrastShadowColor());\n        }\n        lastRenderKey = null;\n        updateFromRepository();\n        requestLayout();\n    }\n\n    /** 重算并把当前字幕行滚动到悬浮窗垂直居中（缩放窗口后调用；v20：不带动画，避免拖拽时抖动）。 */\n",
       "FloatingSubtitleView appearance helpers")
+patch(p, "        GripIndicatorView grip = new GripIndicatorView(getContext());\n",
+      "        grip = new GripIndicatorView(getContext());\n",
+      "FloatingSubtitleView grip field")
 patch(p, "        closeBtn.setOnClickListener(v -> {\n",
       "        playbackControls = new PlaybackControlsView(getContext(), this::applyAppearanceSettings);\n        FrameLayout.LayoutParams controlsLp = new FrameLayout.LayoutParams(\n                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);\n        controlsLp.gravity = Gravity.BOTTOM;\n        controlsLp.leftMargin = dp(10);\n        controlsLp.rightMargin = dp(46);\n        controlsLp.bottomMargin = dp(10);\n        playbackControls.setLayoutParams(controlsLp);\n\n        closeBtn.setOnClickListener(v -> {\n",
       "FloatingSubtitleView create controls")
 patch(p, "        addView(grip);\n        addView(closeBtn); // 最后添加，保证在最上层、可点击\n",
-      "        addView(grip);\n        addView(playbackControls);\n        addView(closeBtn); // 最后添加，保证在最上层、可点击\n",
+      "        addView(grip);\n        addView(playbackControls);\n        addView(closeBtn); // 最后添加，保证在最上层、可点击\n        setEditMode(false);\n",
       "FloatingSubtitleView attach controls")
+patch(p, "    public boolean hitResizeArea(float x, float y) {\n",
+      "    public boolean hitResizeArea(float x, float y) {\n        if (!editMode) return false;\n",
+      "FloatingSubtitleView resize only in edit mode")
 patch(p, "    @Override\n    protected void onDetachedFromWindow() {\n",
-      "    public boolean hitInteractiveControlArea(float x, float y) {\n        if (playbackControls != null && playbackControls.containsPoint(x, y)) return true;\n        return closeBtn != null && closeBtn.getVisibility() == VISIBLE\n                && x >= closeBtn.getLeft() && x <= closeBtn.getRight()\n                && y >= closeBtn.getTop() && y <= closeBtn.getBottom();\n    }\n\n    public boolean isWindowLocked() {\n        return playbackControls != null && playbackControls.isWindowLocked();\n    }\n\n    @Override\n    protected void onDetachedFromWindow() {\n",
+      "    public boolean hitInteractiveControlArea(float x, float y) {\n        if (!editMode) return false;\n        if (playbackControls != null && playbackControls.containsPoint(x, y)) return true;\n        return closeBtn != null && closeBtn.getVisibility() == VISIBLE\n                && x >= closeBtn.getLeft() && x <= closeBtn.getRight()\n                && y >= closeBtn.getTop() && y <= closeBtn.getBottom();\n    }\n\n    public boolean isWindowLocked() {\n        return playbackControls != null && playbackControls.isWindowLocked();\n    }\n\n    @Override\n    protected void onDetachedFromWindow() {\n",
       "FloatingSubtitleView interaction helpers")
+patch(p, "            int from = Math.max(0, currentIdx - WINDOW_RADIUS);\n            int to = Math.min(cues.size() - 1, (currentIdx < 0 ? 0 : currentIdx) + WINDOW_RADIUS);\n",
+      "            int focus = currentIdx < 0 ? 0 : currentIdx;\n            int from = editMode ? Math.max(0, currentIdx - WINDOW_RADIUS) : focus;\n            int to = editMode ? Math.min(cues.size() - 1, focus + WINDOW_RADIUS) : focus;\n",
+      "FloatingSubtitleView current-only display mode")
+
+patch(p, "        tv.setTextColor(color);\n        tv.setAlpha(alpha);\n        tv.setShadowLayer(TEXT_SHADOW_RADIUS, 0f, dp(1), TEXT_SHADOW_COLOR);\n",
+      "        tv.setTextColor(color);\n        tv.setAlpha(alpha);\n        tv.setShadowLayer(TEXT_SHADOW_RADIUS, 0f, 0f, getContrastShadowColor());\n",
+      "FloatingSubtitleView contrast shadow")
 
 p = "app/src/main/java/io/github/ariinyume/dlsitesoundfloat/window/FloatingWindowManager.java"
+patch(p, "import android.graphics.PixelFormat;\n",
+      "import android.graphics.Color;\nimport android.graphics.PixelFormat;\nimport android.graphics.drawable.GradientDrawable;\n",
+      "FloatingWindowManager handle imports")
+patch(p, "import android.view.WindowManager;\n",
+      "import android.view.WindowManager;\nimport android.widget.TextView;\n",
+      "FloatingWindowManager TextView import")
 patch(p, "    private static int sLastY = Integer.MIN_VALUE;\n",
       '    private static int sLastY = Integer.MIN_VALUE;\n    private static boolean sGeometryLoaded = false;\n    private static final String UI_PREFS = "dlsitefloat_overlay_ui";\n',
       "FloatingWindowManager geometry fields")
+patch(p, "    private WindowManager.LayoutParams params;\n",
+      "    private WindowManager.LayoutParams params;\n    private TextView modeHandle;\n    private WindowManager.LayoutParams modeHandleParams;\n    private boolean editMode = false;\n",
+      "FloatingWindowManager mode fields")
+patch(p, "                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE\n                            | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,\n",
+      "                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE\n                            | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE\n                            | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,\n",
+      "FloatingWindowManager display flags")
+patch(p, "            params.y = y;\n",
+      "            params.y = y;\n            params.alpha = 0.78f; // Android 12+ untrusted-touch safe default\n",
+      "FloatingWindowManager display alpha")
+patch(p, "            wm.addView(view, params);\n",
+      "            wm.addView(view, params);\n            view.setEditMode(false);\n            showModeHandle(ctx);\n",
+      "FloatingWindowManager show mode handle")
 patch(p, "            int screenH = ctx.getResources().getDisplayMetrics().heightPixels;\n",
       "            int screenH = ctx.getResources().getDisplayMetrics().heightPixels;\n            loadPersistentGeometry(ctx);\n",
       "FloatingWindowManager load geometry")
+patch(p, "    private void hide() {\n",
+      "    private void setEditMode(boolean edit) {\n        if (wm == null || view == null || params == null) return;\n        editMode = edit;\n        int keep = params.flags & WindowManager.LayoutParams.FLAG_BLUR_BEHIND;\n        int flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE\n                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON | keep;\n        if (!edit) flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;\n        params.flags = flags;\n        params.alpha = edit ? 1.0f : 0.78f;\n        view.setEditMode(edit);\n        try { wm.updateViewLayout(view, params); } catch (Throwable ignored) {}\n        if (modeHandle != null) {\n            modeHandle.setText(edit ? \"✓\" : \"✎\");\n            modeHandle.setContentDescription(edit ? \"完成字幕调整\" : \"调整字幕\");\n            modeHandle.setBackground(makeHandleBackground(edit));\n        }\n        updateModeHandlePosition();\n        XposedCompat.log(TAG + \" mode=\" + (edit ? \"EDIT\" : \"DISPLAY_CLICK_THROUGH\"));\n    }\n\n    private void showModeHandle(Context ctx) {\n        if (wm == null || params == null || modeHandle != null) return;\n        try {\n            modeHandle = new TextView(ctx);\n            modeHandle.setText(\"✎\");\n            modeHandle.setTextColor(Color.WHITE);\n            modeHandle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f);\n            modeHandle.setGravity(Gravity.CENTER);\n            modeHandle.setContentDescription(\"调整字幕\");\n            modeHandle.setClickable(true);\n            modeHandle.setFocusable(false);\n            modeHandle.setElevation(dp(ctx, 8));\n            modeHandle.setBackground(makeHandleBackground(false));\n            modeHandle.setOnClickListener(v -> setEditMode(!editMode));\n\n            int w = dp(ctx, 36);\n            int h = dp(ctx, 48);\n            modeHandleParams = new WindowManager.LayoutParams(\n                    w, h,\n                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O\n                            ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY\n                            : WindowManager.LayoutParams.TYPE_PHONE,\n                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,\n                    PixelFormat.TRANSLUCENT);\n            modeHandleParams.gravity = Gravity.TOP | Gravity.START;\n            updateModeHandlePosition();\n            wm.addView(modeHandle, modeHandleParams);\n        } catch (Throwable e) {\n            XposedCompat.log(TAG + \" control handle unavailable: \" + e.getMessage());\n            modeHandle = null;\n            modeHandleParams = null;\n        }\n    }\n\n    private GradientDrawable makeHandleBackground(boolean active) {\n        GradientDrawable bg = new GradientDrawable();\n        bg.setColor(active ? 0xD9434A54 : 0x99313640);\n        bg.setCornerRadius(dp(appContext, 18));\n        bg.setStroke(dp(appContext, 1), 0x66FFFFFF);\n        return bg;\n    }\n\n    private void updateModeHandlePosition() {\n        if (modeHandleParams == null || params == null || appContext == null) return;\n        int screenW = appContext.getResources().getDisplayMetrics().widthPixels;\n        int screenH = appContext.getResources().getDisplayMetrics().heightPixels;\n        int hw = modeHandleParams.width;\n        int hh = modeHandleParams.height;\n        modeHandleParams.x = clampInt(params.x + params.width - hw / 2, 0, Math.max(0, screenW - hw));\n        modeHandleParams.y = clampInt(params.y + params.height / 2 - hh / 2, 0, Math.max(0, screenH - hh));\n        if (wm != null && modeHandle != null) {\n            try { wm.updateViewLayout(modeHandle, modeHandleParams); } catch (Throwable ignored) {}\n        }\n    }\n\n    private void hideModeHandle() {\n        try { if (wm != null && modeHandle != null) wm.removeView(modeHandle); } catch (Throwable ignored) {}\n        modeHandle = null;\n        modeHandleParams = null;\n        editMode = false;\n    }\n\n    private void hide() {\n        hideModeHandle();\n",
+      "FloatingWindowManager interaction modes")
 patch(p, "        sLastY = p.y;\n    }\n",
       '        sLastY = p.y;\n        Context ctx = appContext;\n        if (ctx != null) {\n            try {\n                ctx.getSharedPreferences(UI_PREFS, Context.MODE_PRIVATE).edit()\n                        .putInt("window_w", sLastW).putInt("window_h", sLastH)\n                        .putInt("window_x", sLastX).putInt("window_y", sLastY).apply();\n            } catch (Throwable ignored) {}\n        }\n    }\n\n    private static void loadPersistentGeometry(Context ctx) {\n        if (sGeometryLoaded || ctx == null) return;\n        sGeometryLoaded = true;\n        try {\n            android.content.SharedPreferences p = ctx.getSharedPreferences(UI_PREFS, Context.MODE_PRIVATE);\n            sLastW = p.getInt("window_w", 0);\n            sLastH = p.getInt("window_h", 0);\n            sLastX = p.getInt("window_x", Integer.MIN_VALUE);\n            sLastY = p.getInt("window_y", Integer.MIN_VALUE);\n        } catch (Throwable ignored) {}\n    }\n',
       "FloatingWindowManager persist geometry")
@@ -83,5 +123,8 @@ patch(p, "                    case MotionEvent.ACTION_DOWN: {\n                 
 patch(p, "                    case MotionEvent.ACTION_MOVE: {\n                        float rawDx = event.getRawX() - downRawX;\n",
       "                    case MotionEvent.ACTION_MOVE: {\n                        if (view.isWindowLocked()) return true;\n                        float rawDx = event.getRawX() - downRawX;\n",
       "FloatingWindowManager lock move")
+patch(p, "                        try {\n                            wm.updateViewLayout(view, params);\n                        } catch (Throwable ignored) {\n                        }\n                        saveGeometry();",
+      "                        try {\n                            wm.updateViewLayout(view, params);\n                        } catch (Throwable ignored) {\n                        }\n                        updateModeHandlePosition();\n                        saveGeometry();",
+      "FloatingWindowManager track handle")
 
-print("DLsiteFloat playback-control patches applied")
+print("DLsiteFloat Rootless Controls v2 display/edit overlay patches applied")

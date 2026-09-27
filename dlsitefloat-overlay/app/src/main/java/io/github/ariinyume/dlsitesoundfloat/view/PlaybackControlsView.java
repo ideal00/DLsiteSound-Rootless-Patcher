@@ -27,10 +27,24 @@ public final class PlaybackControlsView extends LinearLayout {
     public static final String PREF_PANEL_OPACITY = "panel_opacity_pct";
     public static final String PREF_CONTROL_OPACITY = "control_opacity_pct";
     public static final String PREF_FONT_SIZE_SP = "subtitle_font_size_sp";
+    public static final String PREF_TEXT_COLOR = "subtitle_text_color";
 
-    public static final int DEFAULT_PANEL_OPACITY = 100;
+    public static final int DEFAULT_PANEL_OPACITY = 88;
     public static final int DEFAULT_CONTROL_OPACITY = 90;
     public static final int DEFAULT_FONT_SIZE_SP = 17;
+    public static final int DEFAULT_TEXT_COLOR = 0xFFFFFFFF;
+
+    private static final int[] TEXT_COLOR_PRESETS = new int[] {
+            0xFFFFFFFF, // white
+            0xFFFFD54F, // amber
+            0xFF80DEEA, // cyan
+            0xFFA5D6A7, // soft green
+            0xFFF8BBD0, // soft pink
+            0xFF111111  // near black
+    };
+    private static final String[] TEXT_COLOR_LABELS = new String[] {
+            "白", "黄", "青", "绿", "粉", "黑"
+    };
 
     private static final int MIN_OPACITY = 20;
     private static final int MIN_FONT_SIZE_SP = 13;
@@ -164,6 +178,8 @@ public final class PlaybackControlsView extends LinearLayout {
                 MIN_FONT_SIZE_SP, MAX_FONT_SIZE_SP, DEFAULT_FONT_SIZE_SP, "sp",
                 value -> notifyAppearanceChanged());
 
+        addColorPresetRow(settingsPanel);
+
         addView(settingsPanel, new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
 
@@ -258,6 +274,72 @@ public final class PlaybackControlsView extends LinearLayout {
 
         parent.addView(row, new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+    }
+
+    private void addColorPresetRow(LinearLayout parent) {
+        LinearLayout row = new LinearLayout(getContext());
+        row.setOrientation(HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+
+        TextView titleView = label("字体颜色", 11);
+        titleView.setGravity(Gravity.START | Gravity.CENTER_VERTICAL);
+        row.addView(titleView, new LinearLayout.LayoutParams(dp(62), dp(36)));
+
+        LinearLayout chips = new LinearLayout(getContext());
+        chips.setOrientation(HORIZONTAL);
+        chips.setGravity(Gravity.CENTER_VERTICAL);
+
+        int current = prefs.getInt(PREF_TEXT_COLOR, DEFAULT_TEXT_COLOR);
+        for (int i = 0; i < TEXT_COLOR_PRESETS.length; i++) {
+            final int color = TEXT_COLOR_PRESETS[i];
+            final TextView chip = colorChip(TEXT_COLOR_LABELS[i], color, color == current);
+            chip.setTag(color);
+            chip.setOnClickListener(v -> {
+                prefs.edit().putInt(PREF_TEXT_COLOR, color).apply();
+                refreshColorChips(chips, color);
+                notifyAppearanceChanged();
+                armAutoHide();
+            });
+            chips.addView(chip, new LinearLayout.LayoutParams(0, dp(34), 1f));
+        }
+        row.addView(chips, new LinearLayout.LayoutParams(0, dp(36), 1f));
+        parent.addView(row, new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+    }
+
+    private TextView colorChip(String label, int color, boolean selected) {
+        TextView chip = new TextView(getContext());
+        chip.setText(label);
+        chip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        chip.setGravity(Gravity.CENTER);
+        chip.setSingleLine(true);
+        chip.setTextColor(color == 0xFF111111 ? Color.WHITE : color);
+        chip.setPadding(dp(2), 0, dp(2), 0);
+        applyColorChipBackground(chip, color, selected);
+        return chip;
+    }
+
+    private void refreshColorChips(LinearLayout chips, int selectedColor) {
+        for (int i = 0; i < chips.getChildCount(); i++) {
+            TextView chip = (TextView) chips.getChildAt(i);
+            Object tag = chip.getTag();
+            if (!(tag instanceof Integer)) continue;
+            int color = (Integer) tag;
+            applyColorChipBackground(chip, color, color == selectedColor);
+        }
+    }
+
+    private void applyColorChipBackground(TextView chip, int color, boolean selected) {
+        GradientDrawable bg = new GradientDrawable();
+        int rgb = color & 0x00FFFFFF;
+        int alpha = selected ? 0x66 : 0x28;
+        bg.setColor((alpha << 24) | rgb);
+        bg.setCornerRadius(dp(12));
+        if (selected) {
+            bg.setStroke(dp(1), color == 0xFF111111 ? 0xCCFFFFFF : 0xCCFFFFFF);
+        }
+        chip.setBackground(bg);
+        chip.setAlpha(selected ? 1f : 0.78f);
     }
 
     private void notifyAppearanceChanged() {

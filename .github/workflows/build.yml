@@ -108,8 +108,13 @@ jobs:
 
       - name: Verify APK metadata
         run: |
-          echo "versionName=$(apkanalyzer manifest version-name dist/DLsiteSound-Rootless-Patcher-full-ci.apk)"
-          echo "applicationId=$(apkanalyzer manifest application-id dist/DLsiteSound-Rootless-Patcher-full-ci.apk)"
+          APK=dist/DLsiteSound-Rootless-Patcher-full-ci.apk
+          VERSION="$(apkanalyzer manifest version-name "$APK")"
+          APP_ID="$(apkanalyzer manifest application-id "$APK")"
+          echo "versionName=$VERSION"
+          echo "applicationId=$APP_ID"
+          test "$VERSION" = "0.3.0"
+          test "$APP_ID" = "io.github.dlsitesound.rootlesspatcher"
 
       - name: Verify built APK
         run: python3 scripts/verify_built_apk.py dist/DLsiteSound-Rootless-Patcher-full-ci.apk full

@@ -34,10 +34,10 @@ patch(p, "import io.github.ariinyume.dlsitesoundfloat.util.XposedCompat;\n",
       "import io.github.ariinyume.dlsitesoundfloat.util.XposedCompat;\nimport io.github.ariinyume.dlsitesoundfloat.window.FloatingWindowManager;\n",
       "SubtitleRepository black mode import")
 patch(p, "    private void provisionalEarlyClose(long token) {\n        boolean closed = false;\n",
-      "    private void provisionalEarlyClose(long token) {\n        if (FloatingWindowManager.getInstance().isBlackBackdropEnabled()) {\n            XposedCompat.log(\\"[DLsiteSoundFloat] black lyrics mode -> keep floating window during track transition\\");\n            return;\n        }\n        boolean closed = false;\n",
+      "    private void provisionalEarlyClose(long token) {\n        if (FloatingWindowManager.getInstance().isBlackBackdropEnabled()) {\n            XposedCompat.log(\"[DLsiteSoundFloat] black lyrics mode -> keep floating window during track transition\");\n            return;\n        }\n        boolean closed = false;\n",
       "SubtitleRepository keep black mode open during provisional close")
 patch(p, "                    if (floatingWindowOpen) {\n                        floatingWindowOpen = false;\n                        autoClosedForNoSubtitle = true;\n                        closed = true;\n                    }\n",
-      "                    if (floatingWindowOpen && !FloatingWindowManager.getInstance().isBlackBackdropEnabled()) {\n                        floatingWindowOpen = false;\n                        autoClosedForNoSubtitle = true;\n                        closed = true;\n                    } else if (floatingWindowOpen) {\n                        XposedCompat.log(\\"[DLsiteSoundFloat] black lyrics mode -> keep floating window on no-subtitle verdict\\");\n                    }\n",
+      "                    if (floatingWindowOpen && !FloatingWindowManager.getInstance().isBlackBackdropEnabled()) {\n                        floatingWindowOpen = false;\n                        autoClosedForNoSubtitle = true;\n                        closed = true;\n                    } else if (floatingWindowOpen) {\n                        XposedCompat.log(\"[DLsiteSoundFloat] black lyrics mode -> keep floating window on no-subtitle verdict\");\n                    }\n",
       "SubtitleRepository keep black mode open on no-subtitle verdict")
 
 p = "app/src/main/java/io/github/ariinyume/dlsitesoundfloat/view/FloatingSubtitleView.java"

@@ -6,3 +6,4 @@
 .idea/
 .gradle/
 .DS_Store
+__pycache__/

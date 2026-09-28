@@ -13,14 +13,14 @@
 ## DLsiteFloat
 
 - Project: ariinyume/DLSiteSoundFloatingSubtitle
-- Upstream version: v2.1.0
-- Pinned commit: `c8ca46a548115060ce0822e7e8b5ebb6b6d2b048`
+- Upstream version: v2.1.2
+- Pinned commit: `bfe938cee6016791b2ae34fb8269208a6713017b`
 - License: GNU GPL v3
-- Source: https://github.com/ariinyume/DLSiteSoundFloatingSubtitle/tree/v2.1.0
+- Source: https://github.com/ariinyume/DLSiteSoundFloatingSubtitle/tree/v2.1.2
 
 构建时从固定上游源码编译，不再下载官方 Release APK。本仓库通过 `dlsitefloat-overlay/` 与
-`scripts/patch_dlsitesfloat.py` 增加 Rootless Controls v1（播放/暂停、seek、上下轨、进度条、
-自动隐藏控制栏、窗口锁定和几何持久化）。combined-source 包含实际参与构建的修改后源码。
+`scripts/patch_dlsitesfloat.py` 增加 Rootless Controls v4（播放/暂停、seek、上下轨、进度条、
+自动隐藏控制栏、窗口锁定、几何持久化、黑屏防误触、控制柄避开歌词和本地 LRC 字幕导入）。combined-source 包含实际参与构建的修改后源码。
 
 ## DLsiteSound
 

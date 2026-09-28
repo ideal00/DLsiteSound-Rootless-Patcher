@@ -30,5 +30,5 @@ python3 "$ROOT/scripts/verify_no_dlsitesound_apk.py" "$ROOT"
 
 echo
 echo "Prepared: $UPSTREAM"
-echo "Embedded custom DLsiteFloat: Rootless Controls v1"
+echo "Embedded custom DLsiteFloat: Rootless Controls v4"
 echo "Build: cd '$UPSTREAM' && ./gradlew :manager:buildRelease"

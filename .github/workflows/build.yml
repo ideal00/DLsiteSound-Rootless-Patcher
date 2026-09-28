@@ -113,7 +113,7 @@ jobs:
           APP_ID="$(apkanalyzer manifest application-id "$APK")"
           echo "versionName=$VERSION"
           echo "applicationId=$APP_ID"
-          test "$VERSION" = "0.3.0"
+          test "$VERSION" = "0.4.0"
           test "$APP_ID" = "io.github.dlsitesound.rootlesspatcher"
 
       - name: Verify built APK

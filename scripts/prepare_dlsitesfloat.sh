@@ -2,7 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEST="${1:-$ROOT/work/DLsiteFloat-src}"
-PIN="c8ca46a548115060ce0822e7e8b5ebb6b6d2b048"
+PIN="bfe938cee6016791b2ae34fb8269208a6713017b"
 rm -rf "$DEST"
 git clone https://github.com/ariinyume/DLSiteSoundFloatingSubtitle.git "$DEST"
 git -C "$DEST" checkout "$PIN"

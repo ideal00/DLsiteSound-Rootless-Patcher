@@ -20,6 +20,8 @@ import android.widget.TextView;
 import java.util.Locale;
 
 import io.github.ariinyume.dlsitesoundfloat.control.PlayerControlBridge;
+import io.github.ariinyume.dlsitesoundfloat.data.LocalLrcManager;
+import io.github.ariinyume.dlsitesoundfloat.window.BlackScreenLayer;
 
 public final class PlaybackControlsView extends LinearLayout {
     public static final String PREFS = "dlsitefloat_overlay_ui";
@@ -60,6 +62,7 @@ public final class PlaybackControlsView extends LinearLayout {
     private final TextView playPause;
     private TextView lockButton;
     private final TextView settingsButton;
+    private final TextView blackScreenButton;
     private LinearLayout settingsPanel;
 
     private boolean userSeeking;
@@ -113,6 +116,13 @@ public final class PlaybackControlsView extends LinearLayout {
         LinearLayout buttons = new LinearLayout(context);
         buttons.setOrientation(HORIZONTAL);
         buttons.setGravity(Gravity.CENTER);
+
+        blackScreenButton = action("黑", () -> {
+            BlackScreenLayer.getInstance().toggle();
+            refreshBlackScreenButton();
+            armAutoHide();
+        });
+        buttons.addView(blackScreenButton, weighted());
 
         lockButton = action(locked ? "🔒" : "🔓", () -> {
             locked = !locked;
@@ -179,6 +189,11 @@ public final class PlaybackControlsView extends LinearLayout {
                 value -> notifyAppearanceChanged());
 
         addColorPresetRow(settingsPanel);
+
+        TextView importLrc = action("导入当前音轨的本地 LRC 字幕", LocalLrcManager::pickCurrentTrack);
+        importLrc.setContentDescription("从 Kikoeru.Extras 选择当前音轨的汉化 LRC 文件");
+        settingsPanel.addView(importLrc, new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, dp(38)));
 
         addView(settingsPanel, new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
@@ -436,6 +451,7 @@ public final class PlaybackControlsView extends LinearLayout {
 
     private void refreshPlaybackState() {
         if (getVisibility() != VISIBLE) return;
+        refreshBlackScreenButton();
         playPause.setText(PlayerControlBridge.isPlaying() ? "Ⅱ" : "▶");
         long pos = PlayerControlBridge.getCurrentPositionMs();
         long duration = PlayerControlBridge.getDurationMs();
@@ -447,6 +463,12 @@ public final class PlaybackControlsView extends LinearLayout {
             timeText.setText(formatTime(pos) + " / " + formatTime(duration));
         }
         seekBar.setEnabled(PlayerControlBridge.hasPlayer() && duration > 0);
+    }
+
+    private void refreshBlackScreenButton() {
+        boolean active = BlackScreenLayer.getInstance().isEnabled();
+        blackScreenButton.setText(active ? "亮" : "黑");
+        blackScreenButton.setContentDescription(active ? "关闭黑屏，恢复触摸" : "开启黑屏，防止误触");
     }
 
     private static String formatTime(long ms) {

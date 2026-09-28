@@ -61,8 +61,8 @@ build_path = root / "manager/build.gradle.kts"
 build = build_path.read_text(encoding="utf-8")
 old = 'applicationId = defaultManagerPackageName'
 new = '''applicationId = "io.github.dlsitesound.rootlesspatcher"
-        versionCode = 3
-        versionName = "0.3.0"'''
+        versionCode = 5
+        versionName = "0.4.0"'''
 if old not in build:
     raise SystemExit("upstream manager applicationId line changed; refusing to patch blindly")
 build_path.write_text(build.replace(old, new, 1), encoding="utf-8")
@@ -75,8 +75,8 @@ old_ver_code = 'val verCode by extra(commitCount)'
 old_ver_name = 'val verName by extra("1.2")'
 if old_ver_code not in root_build or old_ver_name not in root_build:
     raise SystemExit("upstream root version declarations changed; refusing to patch blindly")
-root_build = root_build.replace(old_ver_code, 'val verCode by extra(3)', 1)
-root_build = root_build.replace(old_ver_name, 'val verName by extra("0.3.0")', 1)
+root_build = root_build.replace(old_ver_code, 'val verCode by extra(5)', 1)
+root_build = root_build.replace(old_ver_name, 'val verName by extra("0.4.0")', 1)
 root_build_path.write_text(root_build, encoding="utf-8")
 
 print("Overlay applied successfully")

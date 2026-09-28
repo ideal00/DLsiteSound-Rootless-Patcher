@@ -10,12 +10,16 @@ import io.github.ariinyume.dlsitesoundfloat.util.XposedCompat;
 public final class PlayerControlBridge {
     private static final String TAG = "[DLsiteSoundFloat:Control]";
     private static volatile WeakReference<Object> playerRef = new WeakReference<>(null);
+    private static volatile WeakReference<Object> exoRef = new WeakReference<>(null);
     private static volatile WeakReference<Object> playlistRef = new WeakReference<>(null);
 
     private PlayerControlBridge() {}
 
     public static void observePlayer(Object player) {
         if (player != null && playerRef.get() != player) playerRef = new WeakReference<>(player);
+        if (player != null && player.getClass().getName().contains("ExoPlayerImpl")) {
+            exoRef = new WeakReference<>(player);
+        }
     }
 
     public static void observePlaylist(Object playlist) {
@@ -23,6 +27,34 @@ public final class PlayerControlBridge {
     }
 
     public static boolean hasPlayer() { return playerRef.get() != null; }
+
+    /** Stable identifier for the current audio item, used only for local subtitle cache lookup. */
+    public static String getCurrentMediaKey() {
+        Object player = exoRef.get();
+        if (player == null) return null;
+        try {
+            Object item = XposedCompat.callMethod(player, "getCurrentMediaItem");
+            if (item == null) return null;
+            Object config = field(item, "localConfiguration");
+            Object uri = config == null ? null : field(config, "uri");
+            if (uri != null) {
+                String raw = uri.toString();
+                int query = raw.indexOf('?');
+                return "uri:" + (query >= 0 ? raw.substring(0, query) : raw);
+            }
+            Object id = field(item, "mediaId");
+            if (id instanceof String && !((String) id).isEmpty()) return "id:" + id;
+        } catch (Throwable ignored) {}
+        return null;
+    }
+
+    private static Object field(Object value, String name) {
+        try {
+            java.lang.reflect.Field f = value.getClass().getField(name);
+            f.setAccessible(true);
+            return f.get(value);
+        } catch (Throwable ignored) { return null; }
+    }
 
     public static boolean isPlaying() {
         Object player = playerRef.get();

@@ -17,12 +17,12 @@
 - 修补版安装
 - DLsiteFloat 悬浮字幕无 Root 正常使用
 
-## 当前开发：Rootless Controls v1
+## 当前开发：Rootless Controls v4
 
 构建流程已经由“下载官方 DLsiteFloat APK”切换为：
 
 ```text
-固定 DLsiteFloat v2.1.0 commit
+固定 DLsiteFloat v2.1.2 commit
 → 应用最小源码 patch
 → 覆盖新增 PlayerControlBridge / PlaybackControlsView
 → CI 编译模块
@@ -39,6 +39,9 @@
 - 控制层 5 秒自动隐藏
 - 锁定窗口
 - 窗口位置 / 大小跨进程持久化
+- 播放页黑屏防误触；开启后仅悬浮窗可交互
+- 将控制柄移出歌词区域，并为底部控制栏预留空间
+- 导入本地 Kikoeru.Extras `.lrc` 字幕并按媒体标识缓存
 
 ## 下一步真机回归
 

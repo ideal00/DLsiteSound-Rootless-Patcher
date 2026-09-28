@@ -4,11 +4,11 @@ from pathlib import Path
 import sys
 
 root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
-allowed_names = {"DLsiteFloat-2.1.0-debug.apk"}
+allowed_names = {"DLsiteFloat-2.1.2-debug.apk"}
 problems = []
 
 for p in root.rglob("*"):
-    if not p.is_file() or ".git" in p.parts or "work" in p.parts:
+    if not p.is_file() or any(part in p.parts for part in (".git", "work", "dist")):
         continue
     lower = p.name.lower()
     if p.name in allowed_names:

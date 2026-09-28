@@ -63,8 +63,8 @@ import org.lsposed.lspatch.util.LSPPackageManager
 
 private const val TARGET_PACKAGE = "jp.co.eisys.dlsitesound"
 private const val MODULE_PACKAGE = "io.github.ariinyume.dlsitesoundfloat"
-private const val MODULE_ASSET = "quickpatch/DLsiteFloat-2.1.0-rootless-v2.apk"
-private const val MODULE_FILE = "DLsiteFloat-2.1.0-rootless-v2.apk"
+private const val MODULE_ASSET = "quickpatch/DLsiteFloat-2.1.2-rootless-v4.apk"
+private const val MODULE_FILE = "DLsiteFloat-2.1.2-rootless-v4.apk"
 private const val VERIFIED_VERSION_NAME = "2.19.0"
 private const val VERIFIED_VERSION_CODE = 573L
 private const val QUICK_PREFS = "quickpatch"
@@ -262,7 +262,7 @@ private fun QuickPatchScreen(
             StatusCard(title = "内置模块 · DLsiteFloat") {
                 when {
                     moduleFile != null -> {
-                        Text("v2.1.0 + Rootless Controls v2 ✓")
+                        Text("v2.1.2 + Rootless Controls v4 ✓")
                         Text("已打包在补丁器内，无需单独安装 DLsiteFloat")
                         Text(MODULE_PACKAGE)
                     }
@@ -274,8 +274,13 @@ private fun QuickPatchScreen(
             StatusCard(title = "固定修补参数") {
                 Text("Integrated / 集成模式")
                 Text("Signature bypass: Level 2")
-                Text("模块: DLsiteFloat 2.1.0 + Rootless Controls v2")
+                Text("模块: DLsiteFloat 2.1.2 + Rootless Controls v4")
                 Text("默认透明点击穿透；边缘控制柄进入编辑模式；不修补 SystemUI")
+            }
+
+            StatusCard(title = "Kikoeru.Extras 汉化字幕") {
+                Text("先将对应音轨的 .lrc 保存到手机。播放页显示“无字幕”时，长按字幕胶囊选取文件；已有悬浮字幕时，点 ✎ → ⚙ 导入。")
+                Text("导入后缓存在 DLsiteSound 本地，播放字幕不依赖网络。")
             }
 
             startupError?.let {

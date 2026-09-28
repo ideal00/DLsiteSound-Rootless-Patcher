@@ -20,6 +20,7 @@ import android.widget.TextView;
 import java.util.Locale;
 
 import io.github.ariinyume.dlsitesoundfloat.control.PlayerControlBridge;
+import io.github.ariinyume.dlsitesoundfloat.window.FloatingWindowManager;
 
 public final class PlaybackControlsView extends LinearLayout {
     public static final String PREFS = "dlsitefloat_overlay_ui";
@@ -179,6 +180,25 @@ public final class PlaybackControlsView extends LinearLayout {
                 value -> notifyAppearanceChanged());
 
         addColorPresetRow(settingsPanel);
+
+        TextView blackLyricsButton = label(
+                FloatingWindowManager.getInstance().isBlackBackdropEnabled()
+                        ? "◼ 退出纯黑歌词模式"
+                        : "◼ 进入纯黑歌词模式",
+                13);
+        blackLyricsButton.setPadding(dp(8), 0, dp(8), 0);
+        blackLyricsButton.setClickable(true);
+        blackLyricsButton.setFocusable(true);
+        blackLyricsButton.setContentDescription("切换纯黑歌词背景");
+        blackLyricsButton.setOnClickListener(v -> {
+            boolean enabled = FloatingWindowManager.getInstance().toggleBlackBackdrop();
+            blackLyricsButton.setText(enabled
+                    ? "◼ 退出纯黑歌词模式"
+                    : "◼ 进入纯黑歌词模式");
+            armAutoHide();
+        });
+        settingsPanel.addView(blackLyricsButton, new LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT, dp(40)));
 
         addView(settingsPanel, new LinearLayout.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));

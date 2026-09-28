@@ -29,6 +29,17 @@ patch(p, '                protected Object after(XposedInterface.Chain chain, Ob
       '                protected Object after(XposedInterface.Chain chain, Object r) {\n                    if ("expo.modules.audio.AudioPlaylist".equals(className)) {\n                        PlayerControlBridge.observePlaylist(chain.getThisObject());\n                    }\n                    String where = className + "." + name;\n',
       "PlayerSourceHook observe playlist")
 
+p = "app/src/main/java/io/github/ariinyume/dlsitesoundfloat/data/SubtitleRepository.java"
+patch(p, "import io.github.ariinyume.dlsitesoundfloat.util.XposedCompat;\n",
+      "import io.github.ariinyume.dlsitesoundfloat.util.XposedCompat;\nimport io.github.ariinyume.dlsitesoundfloat.window.FloatingWindowManager;\n",
+      "SubtitleRepository black mode import")
+patch(p, "    private void provisionalEarlyClose(long token) {\n        boolean closed = false;\n",
+      "    private void provisionalEarlyClose(long token) {\n        if (FloatingWindowManager.getInstance().isBlackBackdropEnabled()) {\n            XposedCompat.log(\\"[DLsiteSoundFloat] black lyrics mode -> keep floating window during track transition\\");\n            return;\n        }\n        boolean closed = false;\n",
+      "SubtitleRepository keep black mode open during provisional close")
+patch(p, "                    if (floatingWindowOpen) {\n                        floatingWindowOpen = false;\n                        autoClosedForNoSubtitle = true;\n                        closed = true;\n                    }\n",
+      "                    if (floatingWindowOpen && !FloatingWindowManager.getInstance().isBlackBackdropEnabled()) {\n                        floatingWindowOpen = false;\n                        autoClosedForNoSubtitle = true;\n                        closed = true;\n                    } else if (floatingWindowOpen) {\n                        XposedCompat.log(\\"[DLsiteSoundFloat] black lyrics mode -> keep floating window on no-subtitle verdict\\");\n                    }\n",
+      "SubtitleRepository keep black mode open on no-subtitle verdict")
+
 p = "app/src/main/java/io/github/ariinyume/dlsitesoundfloat/view/FloatingSubtitleView.java"
 patch(p, "import android.graphics.Paint;\n",
       "import android.graphics.Color;\nimport android.graphics.Paint;\n",

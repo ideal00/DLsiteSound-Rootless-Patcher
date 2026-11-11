@@ -72,6 +72,9 @@ jobs:
         with:
           version: 1.12.0
 
+      - name: Verify source packaging excludes private signing material
+        run: python3 scripts/test_package_sources.py
+
       - name: Test host adapters
         run: python3 scripts/test_host_adapters.py --jdk "$JAVA_HOME"
 
@@ -110,18 +113,7 @@ jobs:
           APK=$(find work/LSPatch/manager/build/outputs/apk/release work/LSPatch/out/release -name '*.apk' -type f 2>/dev/null | head -n 1)
           test -n "$APK"
           cp "$APK" dist/DLsiteSound-Rootless-Patcher-${{ env.RELEASE_TAG }}.apk
-          rm -rf work/LSPatch/.git work/DLsiteFloat-src/.git
-          cp README.md THIRD_PARTY.md LICENSE work/LSPatch/
-          mkdir -p work/Rootless-Patcher-src
-          cp -a .github overlay dlsitefloat-overlay scripts docs README.md THIRD_PARTY.md LICENSE CHANGELOG.md PROJECT_STATUS.md .gitignore work/Rootless-Patcher-src/
-          tar -C work \
-            --exclude='*/build' --exclude='*/build/*' \
-            --exclude='*/.gradle' --exclude='*/.gradle/*' \
-            --exclude='*/.kotlin' --exclude='*/.kotlin/*' \
-            --exclude='LSPatch/out' --exclude='LSPatch/out/*' \
-            --exclude='*/.git' --exclude='*/.git/*' \
-            -czf dist/DLsiteSound-Rootless-Patcher-${{ env.RELEASE_TAG }}-combined-source.tar.gz \
-            LSPatch DLsiteFloat-src Rootless-Patcher-src
+          python3 scripts/package_sources.py work dist/DLsiteSound-Rootless-Patcher-${{ env.RELEASE_TAG }}-combined-source.tar.gz
           (
             cd dist
             sha256sum \

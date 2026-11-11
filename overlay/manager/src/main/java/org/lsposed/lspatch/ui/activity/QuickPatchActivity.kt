@@ -59,16 +59,20 @@ import org.lsposed.lspatch.data.model.PatchTarget
 import org.lsposed.lspatch.data.repository.PatchJobHost
 import org.lsposed.lspatch.data.repository.PatchOutputStore
 import org.lsposed.lspatch.data.repository.PatchRequestStore
+import org.lsposed.lspatch.ui.page.rePatchRequestFor
 import org.lsposed.lspatch.util.LSPPackageManager
 
 private const val TARGET_PACKAGE = "jp.co.eisys.dlsitesound"
 private const val MODULE_PACKAGE = "io.github.ariinyume.dlsitesoundfloat"
-private const val MODULE_ASSET = "quickpatch/DLsiteFloat-2.1.2-rootless-v4.apk"
-private const val MODULE_FILE = "DLsiteFloat-2.1.2-rootless-v4.apk"
+private const val MODULE_ASSET = "quickpatch/DLsiteFloat-2.1.2-rootless-v5.apk"
+private const val MODULE_FILE = "DLsiteFloat-2.1.2-rootless-v5.apk"
 private const val VERIFIED_VERSION_NAME = "2.19.0"
+private const val COMPAT_VERSION_NAME = "2.23.1"
+private const val COMPAT_VERSION_CODE = 633L
 private const val VERIFIED_VERSION_CODE = 573L
 private const val QUICK_PREFS = "quickpatch"
 private const val PREF_PENDING_EXTERNAL_UNINSTALL = "pending_external_uninstall"
+private const val PREF_INSTALL_BASELINE = "install_baseline_update_time"
 
 private data class TargetSnapshot(
     val label: String,
@@ -76,9 +80,11 @@ private data class TargetSnapshot(
     val versionCode: Long,
     val apkPaths: List<String>,
     val alreadyPatched: Boolean,
+    val lastUpdateTime: Long,
 ) {
     val verified: Boolean
-        get() = versionName == VERIFIED_VERSION_NAME && versionCode == VERIFIED_VERSION_CODE
+        get() = (versionName == VERIFIED_VERSION_NAME && versionCode == VERIFIED_VERSION_CODE) ||
+            (versionName == COMPAT_VERSION_NAME && versionCode == COMPAT_VERSION_CODE)
 }
 
 class QuickPatchActivity : ComponentActivity() {
@@ -141,6 +147,23 @@ private fun QuickPatchScreen(
     }
     var startupError by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(true) }
+    var recoveringSource by remember { mutableStateOf(false) }
+    var installBaseline by remember {
+        mutableStateOf<Long?>(if (prefs.contains(PREF_INSTALL_BASELINE)) prefs.getLong(PREF_INSTALL_BASELINE, 0L) else null)
+    }
+
+    fun markInstallAttempt() {
+        if (installBaseline == null) {
+            val baseline = target?.lastUpdateTime ?: 0L
+            installBaseline = baseline
+            prefs.edit().putLong(PREF_INSTALL_BASELINE, baseline).apply()
+        }
+    }
+
+    fun clearInstallAttempt() {
+        installBaseline = null
+        prefs.edit().remove(PREF_INSTALL_BASELINE).apply()
+    }
 
     suspend fun refresh() {
         loading = true
@@ -162,10 +185,12 @@ private fun QuickPatchScreen(
 
     suspend fun installRecoveredOutputs(files: List<File>) {
         if (files.isEmpty() || recoveryBusy) return
+        markInstallAttempt()
         recoveryBusy = true
         recoveryInstallStatus = "正在打开系统安装器……"
         val (status, message) = LSPPackageManager.installFiles(files, useShizuku = false)
         if (status == PackageInstaller.STATUS_SUCCESS) {
+            clearInstallAttempt()
             recoveryInstallStatus = "安装成功 ✓"
             PatchOutputStore.discard(TARGET_PACKAGE)
             recoveredOutputs = emptyList()
@@ -212,7 +237,9 @@ private fun QuickPatchScreen(
         // Some OEM installers complete the install but omit the final callback. The package itself
         // is the authoritative result, so recognise it on return and clean stale output.
         val installed = withContext(Dispatchers.IO) { detectTarget(context) }
-        if (installed?.alreadyPatched == true) {
+        val baseline = installBaseline
+        if (installed?.alreadyPatched == true && baseline != null && installed.lastUpdateTime > baseline) {
+            clearInstallAttempt()
             target = installed
             if (recoveredOutputs.isNotEmpty()) {
                 PatchOutputStore.discard(TARGET_PACKAGE)
@@ -253,7 +280,7 @@ private fun QuickPatchScreen(
                         Text("基础包 + ${t.apkPaths.size - 1} 个分包")
                         Text(if (t.verified) "已验证版本 ✓" else "未验证版本 ⚠ 仍可自行尝试")
                         if (t.alreadyPatched) {
-                            Text("当前 DLsiteSound 已经是 LSPatch 修补版。Quick 模式为避免嵌套修补不会继续。")
+                            Text("已安装修补版：更新时会恢复内嵌原包和全部分包，再生成新版；签名相同时可覆盖安装。")
                         }
                     }
                 }
@@ -262,7 +289,7 @@ private fun QuickPatchScreen(
             StatusCard(title = "内置模块 · DLsiteFloat") {
                 when {
                     moduleFile != null -> {
-                        Text("v2.1.2 + Rootless Controls v4 ✓")
+                        Text("v2.1.2 + Rootless Controls v5 ✓")
                         Text("已打包在补丁器内，无需单独安装 DLsiteFloat")
                         Text(MODULE_PACKAGE)
                     }
@@ -274,7 +301,7 @@ private fun QuickPatchScreen(
             StatusCard(title = "固定修补参数") {
                 Text("Integrated / 集成模式")
                 Text("Signature bypass: Level 2")
-                Text("模块: DLsiteFloat 2.1.2 + Rootless Controls v4")
+                Text("模块: DLsiteFloat 2.1.2 + Rootless Controls v5")
                 Text("默认透明点击穿透；边缘控制柄进入编辑模式；不修补 SystemUI")
             }
 
@@ -308,7 +335,10 @@ private fun QuickPatchScreen(
             PatchStateCard(
                 step = patchStep,
                 onInstall = {
-                    if (ensureInstallPermission(context)) PatchJobHost.install()
+                    if (ensureInstallPermission(context)) {
+                        markInstallAttempt()
+                        PatchJobHost.install()
+                    }
                 },
                 onConfirmUninstall = {
                     if (!ensureInstallPermission(context)) return@PatchStateCard
@@ -330,9 +360,9 @@ private fun QuickPatchScreen(
 
             val canStart =
                 !loading &&
+                    !recoveringSource &&
                     target != null &&
                     moduleFile != null &&
-                    target?.alreadyPatched == false &&
                     (patchStep is PatchStep.Idle || patchStep is PatchStep.Failed)
 
             Button(
@@ -342,37 +372,50 @@ private fun QuickPatchScreen(
                     val t = target ?: return@Button
                     val module = moduleFile ?: return@Button
                     scope.launch {
-                        val request =
-                            PatchRequest(
-                                token = UUID.randomUUID().toString(),
-                                target =
-                                    PatchTarget.InstalledApp(
-                                        packageName = TARGET_PACKAGE,
-                                        label = t.label,
-                                        apkPaths = t.apkPaths,
-                                    ),
-                                mode = PatchMode.Integrated,
-                                debuggable = false,
-                                sigBypassLevel = 2,
-                                injectDex = false,
-                                modules =
-                                    listOf(
-                                        ModuleRef(
-                                            packageName = MODULE_PACKAGE,
-                                            apkPath = module.absolutePath,
-                                            origin = ModuleOrigin.Picked,
-                                        )
-                                    ),
-                                extractNativeLibs = false,
-                                usesCleartextTraffic = false,
-                                injectDocumentsProvider = false,
-                            )
-                        PatchRequestStore.put(request)
-                        PatchJobHost.start(request)
+                        recoveringSource = true
+                        startupError = null
+                        try {
+                            val modules = listOf(ModuleRef(MODULE_PACKAGE, module.absolutePath, ModuleOrigin.Picked))
+                            val request =
+                                if (t.alreadyPatched) {
+                                    val app = withContext(Dispatchers.IO) {
+                                        context.packageManager.getApplicationInfo(TARGET_PACKAGE, PackageManager.GET_META_DATA)
+                                    }
+                                    rePatchRequestFor(
+                                        LSPPackageManager.AppInfo(app, t.label),
+                                        mode = PatchMode.Integrated,
+                                        modules = modules,
+                                    ).copy(sigBypassLevel = 2, injectDex = false)
+                                } else {
+                                    PatchRequest(
+                                        token = UUID.randomUUID().toString(),
+                                        target =
+                                            PatchTarget.InstalledApp(
+                                                packageName = TARGET_PACKAGE,
+                                                label = t.label,
+                                                apkPaths = t.apkPaths,
+                                            ),
+                                        mode = PatchMode.Integrated,
+                                        debuggable = false,
+                                        sigBypassLevel = 2,
+                                        injectDex = false,
+                                        modules = modules,
+                                        extractNativeLibs = false,
+                                        usesCleartextTraffic = false,
+                                        injectDocumentsProvider = false,
+                                    )
+                                }
+                            PatchRequestStore.put(request)
+                            PatchJobHost.start(request)
+                        } catch (error: Exception) {
+                            startupError = "恢复或准备原始安装包失败：${error.message ?: error.javaClass.simpleName}"
+                        } finally {
+                            recoveringSource = false
+                        }
                     }
                 },
             ) {
-                Text("生成无 Root 字幕版")
+                Text(if (recoveringSource) "正在恢复原始安装包……" else if (target?.alreadyPatched == true) "更新字幕模块并重新生成" else "生成无 Root 字幕版")
             }
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -524,6 +567,7 @@ private fun detectTarget(context: Context): TargetSnapshot? {
         versionCode = versionCode,
         apkPaths = paths,
         alreadyPatched = app.metaData?.containsKey("lspatch") == true,
+        lastUpdateTime = pkg.lastUpdateTime,
     )
 }
 

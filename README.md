@@ -1,18 +1,30 @@
 # DLsiteSound Rootless Subtitle Patcher
 
-当前补丁器版本：**0.4.0**
+当前补丁器版本：**0.4.1**
+
+2026-11-11 兼容修复：内置 Rootless Controls v5，回移上游 v2.4.4 的网络适配并补充 Expo 进度同步。
+已在雷电 Android 14 上对 DLsiteSound 2.23.1 (633) 验证“基础包 + 3 分包”修补、系统安装和模块初始化。
+模块编译与 22 项 JVM 回归检查通过，用户已在手机上确认本版本可用。模拟器 ARM 转译下原版、修补版均有 Expo JNI 崩溃，模拟器验证仅覆盖安装及模块初始化。
+完整证据见 [本轮验证记录](docs/COMPATIBILITY_20261111.md)。
+
+**不要单独安装导出的 base.apk**：2.23.1 的基础包缺少原生库并声明必需的 ABI / 密度分包，单独安装会报
+`INSTALL_FAILED_MISSING_SPLIT`。补丁器读取手机已安装应用的完整分包，并通过同一个安装会话安装全部输出。
+此前的 `DLsiteSound-2.23.1-subtitle-fix-v5.apk` 只是基础包，应使用本次重新构建的补丁器。
+
+手机上已经是旧修补版时，可点“更新字幕模块并重新生成”，补丁器会恢复内嵌原包与全部分包后重建。
+签名相同可直接覆盖；此流程已在模拟器验证，无需为更新模块先卸载旧修补版。
 
 面向 Android 的 **无 Root DLsiteSound 字幕补丁器**。
 
-它基于 [JingMatrix/LSPatch](https://github.com/JingMatrix/LSPatch) v1.2 的补丁引擎，在用户自己的手机上读取已经安装的 DLsiteSound（`base.apk + split APKs`），以 **Integrated mode** 嵌入基于 [DLsiteSoundFloatingSubtitle](https://github.com/ariinyume/DLSiteSoundFloatingSubtitle) v2.1.2 固定源码构建的增强模块，然后交给 Android 安装器安装。增强模块加入悬浮播放控制，但不改变字幕抓取/同步的核心逻辑。
+它基于 [JingMatrix/LSPatch](https://github.com/JingMatrix/LSPatch) v1.2 的补丁引擎，在用户自己的手机上读取已经安装的 DLsiteSound（`base.apk + split APKs`），以 **Integrated mode** 嵌入基于 [DLsiteSoundFloatingSubtitle](https://github.com/ariinyume/DLSiteSoundFloatingSubtitle) v2.1.2 固定源码构建的增强模块，然后交给 Android 安装器安装。增强模块加入悬浮播放控制，并回移新版网络适配及播放进度同步修复。
 
 > **本项目不包含、不下载、不分发 DLsiteSound APK。** 用户必须自行从官方渠道安装 DLsiteSound。本项目仅对用户设备上已有的 APK 副本进行本地修补。
 
 ## 构建组合
 
-- DLsiteSound: **2.19.0 (573)**
+- DLsiteSound: **2.23.1 (633)**（用户手机确认可用；兼容原已验证的 2.19.0）
 - LSPatch: **v1.2 / build 487**
-- DLsiteFloat: **v2.1.2**（构建与静态验证通过；本次尚未真机回归）
+- DLsiteFloat: **v2.1.2 + Rootless Controls v5**（回移 v2.4.4 网络适配）
 - Android: LSPatch 要求 Android 9+
 - 模式: Integrated
 - Signature bypass: Level 2

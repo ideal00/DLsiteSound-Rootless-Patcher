@@ -197,4 +197,12 @@ patch(p, "        ActivityButtonHook.hook(cl, repo);\n",
       "        ActivityButtonHook.hook(cl, repo);\n        LocalLrcManager.hook(cl);\n",
       "module local LRC hook")
 
-print("DLsiteFloat Rootless Controls v4 and local LRC patches applied")
+patch(p, "        LocalLrcManager.hook(cl);\n",
+      "        LocalLrcManager.hook(cl);\n        io.github.ariinyume.dlsitesoundfloat.hook.HostEventHook.hook(cl, repo);\n",
+      "module obfuscated host event adapters")
+
+patch("app/build.gradle", "def appVersionCode = 954", "def appVersionCode = 1111", "v5 module version code")
+patch("app/build.gradle", "def appVersionName = '2.1.2'", "def appVersionName = '2.1.2-rootless-v5'", "v5 module version name")
+patch("app/build.gradle", "def appVersionTag = '2.1.2'", "def appVersionTag = '2.1.2-rootless-v5'", "v5 module output tag")
+
+print("DLsiteFloat Rootless Controls v5 compatibility and local LRC patches applied")

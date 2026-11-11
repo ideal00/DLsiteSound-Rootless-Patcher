@@ -22,6 +22,11 @@
 `scripts/patch_dlsitesfloat.py` 增加 Rootless Controls v4（播放/暂停、seek、上下轨、进度条、
 自动隐藏控制栏、窗口锁定、几何持久化、黑屏防误触、控制柄避开歌词和本地 LRC 字幕导入）。combined-source 包含实际参与构建的修改后源码。
 
+网络适配回移自 [ariinyume/DLsiteFloat v2.4.4](https://github.com/ariinyume/DLsiteFloat/tree/v2.4.4)，
+固定 commit `b339c65a8ec674cfa2c6aa6834d15a99957fad3a`，GPL-3.0。
+`NetworkHook.java` 和 `Shape.java` 保留上游版权声明；回移脚本为 `scripts/import_upstream_network.py`。
+本增强版未接入上游的新设置页、缓存预取与作品键缓存 API，保留原有本地 LRC 优先规则。
+
 ## DLsiteSound
 
 DLsiteSound 属于其权利人。本项目**不包含、不镜像、不下载、不分发** DLsiteSound APK。补丁器仅读取用户设备上已经合法安装的副本并在本地生成修补版本。

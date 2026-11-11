@@ -11,7 +11,7 @@ EXPECTED_APP_ID = b"io.github.dlsitesound.rootlesspatcher"
 EXPECTED_ACTIVITY = b"QuickPatchActivity"
 EXPECTED_TARGET = b"jp.co.eisys.dlsitesound"
 EXPECTED_MODULE_PACKAGE = b"io.github.ariinyume.dlsitesoundfloat"
-MODULE_ASSET = "assets/quickpatch/DLsiteFloat-2.1.2-rootless-v4.apk"
+MODULE_ASSET = "assets/quickpatch/DLsiteFloat-2.1.2-rootless-v5.apk"
 V2_BLOCK_ID = 0x7109871A
 
 
@@ -97,6 +97,8 @@ def main() -> None:
             b"PlaybackControlsView",
             b"BlackScreenLayer",
             b"LocalLrcManager",
+            b"HostEventHook",
+            b"Lio/github/ariinyume/dlsitesoundfloat/util/Shape;",
             b"panel_opacity_pct",
             b"control_opacity_pct",
             b"subtitle_font_size_sp",

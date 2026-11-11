@@ -72,6 +72,9 @@ jobs:
         with:
           version: 1.12.0
 
+      - name: Test host adapters
+        run: python3 scripts/test_host_adapters.py --jdk "$JAVA_HOME"
+
       - name: Build custom DLsiteFloat module
         run: bash scripts/build_dlsitesfloat.sh work/DLsiteFloat-src work/LSPatch/manager/src/main/assets/quickpatch
 
@@ -110,7 +113,7 @@ jobs:
           rm -rf work/LSPatch/.git work/DLsiteFloat-src/.git
           cp README.md THIRD_PARTY.md LICENSE work/LSPatch/
           mkdir -p work/Rootless-Patcher-src
-          cp -a .github overlay dlsitefloat-overlay scripts README.md THIRD_PARTY.md LICENSE CHANGELOG.md PROJECT_STATUS.md .gitignore work/Rootless-Patcher-src/
+          cp -a .github overlay dlsitefloat-overlay scripts docs README.md THIRD_PARTY.md LICENSE CHANGELOG.md PROJECT_STATUS.md .gitignore work/Rootless-Patcher-src/
           tar -C work \
             --exclude='*/build' --exclude='*/build/*' \
             --exclude='*/.gradle' --exclude='*/.gradle/*' \
@@ -134,7 +137,7 @@ jobs:
           APP_ID="$(apkanalyzer manifest application-id "$APK")"
           echo "versionName=$VERSION"
           echo "applicationId=$APP_ID"
-          test "$VERSION" = "0.4.0"
+          test "$VERSION" = "${RELEASE_TAG#v}"
           test "$APP_ID" = "io.github.dlsitesound.rootlesspatcher"
 
       - name: Verify release APK
@@ -147,4 +150,4 @@ jobs:
           gh release create "${{ env.RELEASE_TAG }}" dist/* \
             --target "${{ github.sha }}" \
             --title "DLsiteSound Rootless Patcher ${{ env.RELEASE_TAG }}" \
-            --generate-notes
+            --notes-file "docs/releases/${RELEASE_TAG}.md"

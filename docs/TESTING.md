@@ -1,5 +1,8 @@
 # 真机测试指南
 
+2026-11-11 新增 0.4.1 / 2.23.1 验证记录，见 [COMPATIBILITY_20261111.md](COMPATIBILITY_20261111.md)。
+下方旧指南的 2.19.0 / 2.1.0 和 arm64 构建描述为历史基线；0.4.1 采用四 ABI 与 Rootless Controls v5，用户已在手机确认可用。
+
 当前测试目标：**DLsiteSound 2.19.0 (573)** + DLsiteFloat 2.1.0 + Integrated LSPatch。
 
 ## 测试前
